@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <vector>
 #include <array>
+#include <cmath>
 
 #include "../pixel-buffer.hpp"
 
@@ -15,102 +16,89 @@ struct Vector_2D {
     T y;
 };
 
+/* Shorthands */
 using Vector_2Di = Vector_2D<int>;
 
-/* ZINGL (2012) */
-auto bresenham_plot(Basic_RGBA_Buffer & buffer, Vector_2Di origin, Vector_2Di target,
-                         std::array<uint8_t, 4> color = { 255, 255, 255, 255 }) -> void {
-    auto [x1, y1] = origin;
-    auto [x2, y2] = target;
+struct Mat3 {
+    using mat3_t = std::array<std::array<double, 3>, 3>;
 
-    auto dx = std::abs(x2 - x1);
-    auto dy = -std::abs(y2 - y1);
-    auto error = dx + dy;
+    mat3_t mat;
 
-    auto direction_x = x1 < x2 ? 1 : -1;
-    auto direction_y = y1 < y2 ? 1 : -1;
+    static auto identity() -> Mat3 {
+        return {
+            std::array<double, 3> {1, 0, 0},
+            {0, 1, 0},
+            {0, 0, 1}
+        };
+    }
 
-    auto x = x1, y = y1;
+    static auto translate(double a, double b) -> Mat3 {
+        return {
+            std::array<double, 3> {1, 0, a},
+            {0, 1, b},
+            {0, 0, 1}
+        };
+    }
 
-    while (x != x2 || y != y2) {
-        buffer.set(x, y, color);
+    static auto rotate(double angle) -> Mat3 {
+        return {
+            std::array<double, 3> { std::cos(angle), std::sin(angle), 0 },
+            { -std::sin(angle), std::cos(angle), 0 },
+            { 0, 0, 1 }
+        };
+    }
 
-        auto double_error = error * 2;
+    auto operator[](std::size_t index) {
+        return mat[index];
+    }
+};
 
-        if (double_error >= dy) {
-            x += direction_x;
-            error += dy;
-        }
+auto operator*(Mat3 left, Mat3 right) -> Mat3 {
+    auto product = Mat3{};
 
-        if (double_error <= dx) {
-            y += direction_y;
-            error += dx;
+    for (auto i = 0ul; i < 3; ++i) {
+        for (auto j = 0ul; j < 3; ++j) {
+            product[i][j] = left[i][j] * right[i][j];
         }
     }
+
+
+
+    return product;
 }
 
-auto bresenham_prof(Basic_RGBA_Buffer & buffer, Vector_2Di origin, Vector_2Di target,
-                    std::array<uint8_t, 4> color = { 255, 255, 255, 255 }) -> void {
-    if (origin.x > target.x) {
-        std::swap(origin, target);
-    }
-
-    auto [x1, y1] = origin;
-    auto [x2, y2] = target;
-
-    auto dx = x2 - x1;
-    auto dy = y2 - y1;
-
-    auto i = 2 * dy;
-    auto j = 2 * (dy - dx);
-    auto d = i - dx;
-    auto slope = 1;
-
-    if (dy < 0){
-        slope = -1;
-        dy = -dy;
-    }
-
-    auto y = y1;
-    for (auto x = x1; x <= x2; x++){
-        buffer.set(x, y, color);
-        if (d <= 0){
-            d += i;
-        } else{
-            d += j;
-            y += slope;
-        }
-    }
+template <typename T>
+auto apply_transform(Vector_2D<T> vec, Mat3 transform) -> Vector_2D<T> {
+    return {
+        static_cast<T>(vec.x * transform[0][0] + vec.y * transform[0][1] + /*vec.w * */ transform[0][2]),
+        static_cast<T>(vec.x * transform[1][0] + vec.y * transform[1][1] + /*vec.w * */ transform[1][2])
+    };
 }
 
-auto bresenham(Basic_RGBA_Buffer & buffer, Vector_2Di origin, Vector_2Di target,
-               std::array<uint8_t, 4> color = { 255, 255, 255, 255 }) -> void {
-    if (origin.x > target.x) {
-        std::swap(origin, target);
-    }
+template <typename T>
+auto operator*(Vector_2D<T> vec, Mat3 transform) -> Vector_2D<T> {
+    return apply_transform(vec, transform);
+}
 
-    auto [x1, y1] = origin;
-    auto [x2, y2] = target;
+template <typename T, typename Scalar>
+auto translate(Vector_2D<T> vec, Scalar a, Scalar b) -> Vector_2D<T> {
+    return { vec.x + a, vec.y + b };
+}
 
-    auto dx = x2 - x1;
-    auto dy = y2 - y1;
+template <typename T, typename Scalar>
+auto scale(Vector_2D<T> vec, Scalar a, Scalar b) -> Vector_2D<T> {
+    return { vec.x * a, vec.y * b };
+}
 
-    auto i = 2 * dy;
-    auto j = 2 * (dy - dx);
-    auto d = i - dx;
+template <typename T, typename Scalar>
+auto rotate(Vector_2D<T> vec, Scalar theta) -> Vector_2D<T> {
+    return { vec.x * std::cos(theta) + vec.y * std::sin(theta),
+             - vec.x * std::sin(theta) + vec.y * std::cos(theta) };
+}
 
-    auto y = y1, x_max = x2;
-
-    for (auto x = x1; x < x_max; ++x) {
-        buffer.set(x, y, color);
-
-        if (d < 0) {
-            d += i;
-        } else {
-            d += j;
-            ++y;
-        }
-    }
+template <typename T, typename Scalar>
+auto shear(Vector_2D<T> vec, Scalar a, Scalar b) -> Vector_2D<T> {
+    return { vec.x + a * vec.y, vec.y + b * vec.x };
 }
 
 }
