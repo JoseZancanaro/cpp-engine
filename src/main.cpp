@@ -13,25 +13,23 @@
 
 auto main() -> int {
     auto video_mode = sf::VideoMode(800, 600);
-    auto window = sf::RenderWindow{video_mode, "cpp-engine" };
+    auto window = sf::RenderWindow{video_mode, "cpp-engine"};
 
     ImGui::SFML::Init(window);
     auto clock = sf::Clock{};
 
-    auto pixels = engine::Basic_RGBA_Buffer{ video_mode.width, video_mode.height, 255u };
+    auto pixels = engine::Basic_RGBA_Buffer{video_mode.width, video_mode.height, 255u};
 
     auto buffer_tex = sf::Texture{};
     buffer_tex.create(video_mode.width, video_mode.height);
-    buffer_tex.update(pixels.elements.data());
+    buffer_tex.update(std::data(pixels));
 
     auto buffer_sprite = sf::Sprite{buffer_tex};
 
     using precision_type = double;
 
     /* Transform data */
-    auto rect = engine::Rectangle<precision_type> {
-            engine::Vector_2D<precision_type> {100, 100}, {300, 100}, {300, 300}, {100, 300}
-    };
+    auto rect = engine::Rectangle<precision_type>{{{ {100, 100}, {300, 100}, {300, 300}, {100, 300} }}};
 
     auto lastClick = engine::Vector_2D<precision_type> { 0, 0 };
 
@@ -80,25 +78,27 @@ auto main() -> int {
                 }
 
                 /* Treat rect input */
-                auto transform = engine::Mat3::identity();
+                auto transform = [&]() -> engine::Mat3 {
+                    /* Translate */
+                    if (event.key.code == sf::Keyboard::Left) {
+                        return engine::Mat3::translate(-shift, 0);
+                    } else if (event.key.code == sf::Keyboard::Right) {
+                        return engine::Mat3::translate(shift, 0);
+                    } else if (event.key.code == sf::Keyboard::Up) {
+                        return engine::Mat3::translate(0, -shift);
+                    } else if (event.key.code == sf::Keyboard::Down) {
+                        return engine::Mat3::translate(0, shift);
+                    }
 
-                /* Translate */
-                if (event.key.code == sf::Keyboard::Left) {
-                    transform = engine::Mat3::translate(-shift, 0);
-                } else if (event.key.code == sf::Keyboard::Right) {
-                    transform = engine::Mat3::translate(shift, 0);
-                } else if (event.key.code == sf::Keyboard::Up) {
-                    transform = engine::Mat3::translate(0, -shift);
-                } else if (event.key.code == sf::Keyboard::Down) {
-                    transform = engine::Mat3::translate(0, shift);
-                }
+                    /* Rotate */
+                    if (event.key.code == sf::Keyboard::A) {
+                        return engine::Mat3::rotate(angle * (std::numbers::pi / 180.0));
+                    } else if (event.key.code == sf::Keyboard::S) {
+                        return engine::Mat3::rotate(-angle * (std::numbers::pi / 180.0));
+                    }
 
-                /* Rotate */
-                if (event.key.code == sf::Keyboard::A) {
-                    transform = engine::Mat3::rotate(angle * (std::numbers::pi / 180.0));
-                } else if (event.key.code == sf::Keyboard::S) {
-                    transform = engine::Mat3::rotate(-angle * (std::numbers::pi / 180.0));
-                }
+                    return engine::Mat3::identity();
+                }();
 
                 auto axis = [&]() -> engine::Vector_2D<precision_type> {
                     if (event.key.shift) {

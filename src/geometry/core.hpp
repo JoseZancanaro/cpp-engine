@@ -22,47 +22,61 @@ using Vector_2Di = Vector_2D<int>;
 struct Mat3 {
     using mat3_t = std::array<std::array<double, 3>, 3>;
 
-    mat3_t mat;
+    mat3_t data;
 
     static auto identity() -> Mat3 {
-        return {
-            std::array<double, 3> {1, 0, 0},
-            {0, 1, 0},
-            {0, 0, 1}
-        };
+        return {{{
+            { 1, 0, 0 },
+            { 0, 1, 0 },
+            { 0, 0, 1 }
+        }}};
     }
 
     static auto translate(double a, double b) -> Mat3 {
-        return {
-            std::array<double, 3> {1, 0, a},
-            {0, 1, b},
-            {0, 0, 1}
-        };
+        return {{{
+            { 1, 0, a },
+            { 0, 1, b },
+            { 0, 0, 1 }
+        }}};
     }
 
     static auto rotate(double angle) -> Mat3 {
-        return {
-            std::array<double, 3> { std::cos(angle), std::sin(angle), 0 },
-            { -std::sin(angle), std::cos(angle), 0 },
-            { 0, 0, 1 }
-        };
+        return {{{
+             {std::cos(angle), std::sin(angle), 0},
+             {-std::sin(angle), std::cos(angle), 0},
+             {0, 0, 1}
+        }}};
     }
 
-    auto operator[](std::size_t index) {
-        return mat[index];
+    constexpr auto operator[](std::size_t index) -> decltype(std::declval<mat3_t &>()[mat3_t::size_type{}]){
+        return data[index];
+    }
+
+    constexpr auto operator[](std::size_t index) const -> decltype(std::declval<mat3_t const&>()[mat3_t::size_type{}]){
+        return data[index];
+    }
+
+    constexpr auto size() const -> mat3_t::size_type {
+        return std::size(data);
+    }
+
+    constexpr auto begin() -> mat3_t::iterator {
+        return std::begin(data);
+    }
+
+    constexpr auto end() -> mat3_t::iterator {
+        return std::end(data);
     }
 };
 
-auto operator*(Mat3 left, Mat3 right) -> Mat3 {
+auto operator*(Mat3 const& left, Mat3 const& right) -> Mat3 {
     auto product = Mat3{};
 
-    for (auto i = 0ul; i < 3; ++i) {
-        for (auto j = 0ul; j < 3; ++j) {
+    for (auto i = 0ul; i < std::size(product); ++i) {
+        for (auto j = 0ul; j < std::size(product); ++j) {
             product[i][j] = left[i][j] * right[i][j];
         }
     }
-
-
 
     return product;
 }

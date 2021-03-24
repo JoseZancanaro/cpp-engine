@@ -23,14 +23,14 @@ struct Buffer_2D {
 
     auto set(std::size_t x, std::size_t y, Pixel_Type value) -> void {
         auto index = flat_index(x, y, width, Length);
-        if (index >= 0 && index < std::size(elements)) {
+        if (index >= 0 && index < std::size(elements)) { // @TODO remove check
             elements.at() = value;
         }
     }
 
     auto set(std::size_t x, std::size_t y, std::array<Pixel_Type, Length> value) -> void {
         auto index = flat_index(x, y, width, Length);
-        if (index >= 0 && index + std::size(value) < std::size(elements)) {
+        if (index >= 0 && index + std::size(value) < std::size(elements)) { // @TODO remove check
             std::copy_n(std::begin(value), std::size(value),
                         std::next(std::begin(elements), index)); // data.begin() + flat_index(...)
         }
