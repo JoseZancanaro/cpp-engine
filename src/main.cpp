@@ -8,7 +8,6 @@
 #include <array>
 
 #include "geometry/core.hpp"
-#include "geometry/primitives.hpp"
 #include "draw.hpp"
 
 auto main() -> int {

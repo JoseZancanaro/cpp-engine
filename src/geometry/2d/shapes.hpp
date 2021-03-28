@@ -1,13 +1,12 @@
-#ifndef CPP_ENGINE_PRIMITIVES_HPP
-#define CPP_ENGINE_PRIMITIVES_HPP
-
-#include <type_traits>
-#include <vector>
-#include <array>
-
-#include "core.hpp"
+#ifndef CPP_ENGINE_2D_SHAPES_HPP
+#define CPP_ENGINE_2D_SHAPES_HPP
 
 namespace engine {
+
+template <typename Shape>
+auto centroid(Shape && shape) {
+    return shape.centroid();
+}
 
 template <typename T>
 struct Rectangle {
@@ -23,6 +22,10 @@ template <typename T, typename R = T>
 struct Circle {
     Vector_2D<T> center;
     R radius;
+
+    auto centroid() -> Vector_2D<T> {
+        return center;
+    }
 };
 
 template <typename T>
@@ -30,14 +33,6 @@ struct Polygon {
     std::vector<Vector_2D<T>> vertex;
 };
 
-template <typename Shape>
-auto centroid(Shape && shape) {
-    return shape.centroid();
 }
 
-
-}
-
-
-
-#endif //CPP_ENGINE_PRIMITIVES_HPP
+#endif //CPP_ENGINE_2D_SHAPES_HPP

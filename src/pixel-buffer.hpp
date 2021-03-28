@@ -13,6 +13,8 @@ auto flat_index(std::size_t x, std::size_t y, std::size_t width, std::size_t len
 
 template <typename Pixel_Type, std::size_t Length>
 struct Buffer_2D {
+    using Pixel_Buffer = std::vector<Pixel_Type>;
+
     std::vector<Pixel_Type> elements;
     std::size_t width;
     std::size_t height;
@@ -36,43 +38,43 @@ struct Buffer_2D {
         }
     }
 
-    auto size() noexcept -> typename std::vector<Pixel_Type>::size_type {
+    auto size() noexcept -> typename Pixel_Buffer::size_type {
         return std::size(elements);
     }
 
-    auto data() noexcept -> typename std::vector<Pixel_Type>::pointer {
+    auto data() noexcept -> typename Pixel_Buffer::pointer {
         return elements.data();
     }
 
-    auto begin() noexcept -> typename std::vector<Pixel_Type>::iterator {
+    auto begin() noexcept -> typename Pixel_Buffer::iterator {
         return std::begin(elements);
     }
 
-    auto end() noexcept -> typename std::vector<Pixel_Type>::iterator {
+    auto end() noexcept -> typename Pixel_Buffer::iterator {
         return std::end(elements);
     }
 
-    auto rbegin() noexcept -> typename std::vector<Pixel_Type>::iterator {
+    auto rbegin() noexcept -> typename Pixel_Buffer::iterator {
         return std::rbegin(elements);
     }
 
-    auto rend() noexcept -> typename std::vector<Pixel_Type>::iterator {
+    auto rend() noexcept -> typename Pixel_Buffer::iterator {
         return std::rend(elements);
     }
 
-    auto cbegin() const noexcept -> typename std::vector<Pixel_Type>::const_iterator {
+    auto cbegin() const noexcept -> typename Pixel_Buffer::const_iterator {
         return std::cbegin(elements);
     }
 
-    auto cend() const noexcept -> typename std::vector<Pixel_Type>::const_iterator {
+    auto cend() const noexcept -> typename Pixel_Buffer::const_iterator {
         return std::cend(elements);
     }
 
-    auto crbegin() const noexcept -> typename std::vector<Pixel_Type>::const_iterator {
+    auto crbegin() const noexcept -> typename Pixel_Buffer::const_iterator {
         return std::crbegin(elements);
     }
 
-    auto crend() const noexcept -> typename std::vector<Pixel_Type>::const_iterator {
+    auto crend() const noexcept -> typename Pixel_Buffer::const_iterator {
         return std::crend(elements);
     }
 };

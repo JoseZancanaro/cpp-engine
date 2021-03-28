@@ -2,14 +2,14 @@
 #define CPP_ENGINE_DRAW_HPP
 
 #include "pixel-buffer.hpp"
-#include "geometry/primitives.hpp"
+#include "geometry/2d/vector.hpp"
 
 namespace engine {
 
 /* ZINGL (2012) */
-template <typename T>
-auto bresenham_plot(Basic_RGBA_Buffer & buffer, Vector_2D<T> origin, Vector_2D<T> target,
-                    std::array<uint8_t, 4> color = { 255, 255, 255, 255 }) -> void {
+template <typename Pixel_Type = std::uint8_t, std::size_t Color_Length = 4, typename T>
+auto discrete_line_plot(Buffer_2D<Pixel_Type, Color_Length> & buffer, Vector_2D<T> origin, Vector_2D<T> target,
+                            std::array<Pixel_Type, Color_Length> color) -> void {
     auto x1 = static_cast<int>(origin.x), y1 = static_cast<int>(origin.y);
     auto x2 = static_cast<int>(target.x), y2 = static_cast<int>(target.y);
 
@@ -70,12 +70,12 @@ auto bresenham(Basic_RGBA_Buffer & buffer, Vector_2Di origin, Vector_2Di target,
     }
 }
 
-template <typename T>
-auto draw_rect(Basic_RGBA_Buffer & buffer, Rectangle<T> rect, std::array<std::uint8_t, 4> color) -> void {
-    bresenham_plot(buffer, rect.vertex[0], rect.vertex[1], color);
-    bresenham_plot(buffer, rect.vertex[1], rect.vertex[2], color);
-    bresenham_plot(buffer, rect.vertex[2], rect.vertex[3], color);
-    bresenham_plot(buffer, rect.vertex[3], rect.vertex[0], color);
+template <typename Pixel_Type = std::uint8_t, std::size_t Color_Length = 4, typename T>
+auto draw_rect(Buffer_2D<Pixel_Type, Color_Length> & buffer, Rectangle<T> rect, std::array<Pixel_Type, Color_Length> color) -> void {
+    discrete_line_plot(buffer, rect.vertex[0], rect.vertex[1], color);
+    discrete_line_plot(buffer, rect.vertex[1], rect.vertex[2], color);
+    discrete_line_plot(buffer, rect.vertex[2], rect.vertex[3], color);
+    discrete_line_plot(buffer, rect.vertex[3], rect.vertex[0], color);
 }
 
 }
