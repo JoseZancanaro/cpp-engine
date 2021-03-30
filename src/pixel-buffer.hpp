@@ -11,7 +11,7 @@ auto flat_index(std::size_t x, std::size_t y, std::size_t width, std::size_t len
     return (y * width + x) * length;
 }
 
-template <typename Pixel_Type, std::size_t Length>
+template <class Pixel_Type, std::size_t Length>
 struct Buffer_2D {
     using Pixel_Buffer = std::vector<Pixel_Type>;
 
@@ -30,7 +30,7 @@ struct Buffer_2D {
         }
     }
 
-    auto set(std::size_t x, std::size_t y, std::array<Pixel_Type, Length> value) -> void {
+    auto set(std::size_t x, std::size_t y, std::array<Pixel_Type, Length> const& value) -> void {
         auto index = flat_index(x, y, width, Length);
         if (index >= 0 && index + std::size(value) < std::size(elements)) { // @TODO remove check
             std::copy_n(std::begin(value), std::size(value),

@@ -1,14 +1,14 @@
 #ifndef CPP_ENGINE_2D_SHAPES_HPP
 #define CPP_ENGINE_2D_SHAPES_HPP
 
-namespace engine {
+namespace engine::space2D {
 
-template <typename Shape>
+template <class Shape>
 auto centroid(Shape && shape) {
     return shape.centroid();
 }
 
-template <typename T>
+template <class T>
 struct Rectangle {
     std::array<Vector_2D<T>, 4> vertex;
 
@@ -18,7 +18,12 @@ struct Rectangle {
     }
 };
 
-template <typename T, typename R = T>
+template <class T>
+struct Triangle {
+    std::array<Vector_2D<T>, 3> vertex;
+};
+
+template <class T, class R = T>
 struct Circle {
     Vector_2D<T> center;
     R radius;
@@ -28,7 +33,7 @@ struct Circle {
     }
 };
 
-template <typename T>
+template <class T>
 struct Polygon {
     std::vector<Vector_2D<T>> vertex;
 };
