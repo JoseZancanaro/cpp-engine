@@ -1,4 +1,5 @@
 #include <fmt/core.h>
+#include <fmt/ranges.h>
 
 #include <SFML/Graphics.hpp>
 #include <imgui-SFML.h>
@@ -14,6 +15,7 @@ auto main() -> int {
     ImGui::SFML::Init(window);
     auto clock = sf::Clock{};
 
+    /* Instantiate template runner */
     auto runner = Tetrahedron_Runner<1920, 1080>{};
 
     while (window.isOpen()) {
@@ -22,6 +24,7 @@ auto main() -> int {
         while (window.pollEvent(event)) {
             ImGui::SFML::ProcessEvent(event);
 
+            /* Feed event */
             runner.event_hook(window, event);
 
             if (event.type == sf::Event::Closed) {
@@ -31,6 +34,7 @@ auto main() -> int {
 
         ImGui::SFML::Update(window, clock.restart());
 
+        /* Request rendering */
         runner.render(window);
 
         ImGui::SFML::Render(window);

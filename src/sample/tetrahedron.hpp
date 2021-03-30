@@ -21,7 +21,6 @@ class Tetrahedron_Runner {
     sf::Sprite pixels_sprite;
 
     /* Example data */
-
     engine::Tetrahedron<T> tetrahedron;
     engine::Vector_2D<T> click;
     T shift;
@@ -63,11 +62,11 @@ public:
 
                 /* Rotate */
                 if (event.key.code == sf::Keyboard::X) {
-                    return engine::Mat4::rotate(axis::X, angle * (std::numbers::pi / 180.0));
+                    return engine::Mat4::rotate(axis::X, angle * (std::numbers::pi / 180.0) * (1 - 2 * event.key.shift));
                 } else if (event.key.code == sf::Keyboard::Y) {
-                    return engine::Mat4::rotate(axis::Y, angle * (std::numbers::pi / 180.0));
+                    return engine::Mat4::rotate(axis::Y, angle * (std::numbers::pi / 180.0) * (1 - 2 * event.key.shift));
                 } else if (event.key.code == sf::Keyboard::Z) {
-                    return engine::Mat4::rotate(axis::Z, angle * (std::numbers::pi / 180.0));
+                    return engine::Mat4::rotate(axis::Z, angle * (std::numbers::pi / 180.0) * (1 - 2 * event.key.shift));
                 }
 
                 return engine::Mat4::identity();

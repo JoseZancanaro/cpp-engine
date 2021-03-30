@@ -1,6 +1,10 @@
 #ifndef CPP_ENGINE_CORE_HPP
 #define CPP_ENGINE_CORE_HPP
 
+/* Base imports */
+#include "transform_base.hpp"
+#include "axis.hpp"
+
 /* 2D imports */
 
 #include "2d/vector.hpp"

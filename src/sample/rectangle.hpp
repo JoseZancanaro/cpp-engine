@@ -18,7 +18,6 @@ class Rectangle_Runner {
     sf::Sprite pixels_sprite;
 
     /* Example data */
-
     engine::Rectangle<T> rect;
     engine::Vector_2D<T> click;
     T shift;
