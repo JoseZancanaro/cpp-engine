@@ -13,8 +13,10 @@ José Carlos Zancanaro [@zancanaro](https://github.com/JoseZancanaro)
 $ conan remote add <NAME> https://api.bintray.com/conan/bincrafters/public-conan 
 ```
 ```shell
-$ conan profile new default --detect 
-$ conan profile update settings.compiler.libcxx=libstdc++11 
+$ conan profile new default --detect
+
+(if needed)
+$ conan profile update settings.compiler.libcxx=libstdc++11 default
 ```
 ```shell
 $ cd build
@@ -33,5 +35,5 @@ $ cmake --build .
 ### Execute
 
 ```shell
-$ ./cmake-build-release/meme-engine
+$ ./cmake-build-release/cpp-engine
 ```
