@@ -1,7 +1,7 @@
 #ifndef CPP_ENGINE_2D_PRIMITIVES_HPP
 #define CPP_ENGINE_2D_PRIMITIVES_HPP
 
-#include "conceptual.hpp"
+#include "../../utility/concepts.hpp"
 
 namespace engine::space2D {
 

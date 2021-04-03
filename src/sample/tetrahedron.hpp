@@ -35,7 +35,7 @@ public:
         tetrahedron{{ {{300, 200, 0}, {400, 300, 0}, {200, 300, 0}, {300, 250, 100}} }},
         click{0, 0},
         shift{10},
-        angle{30}
+        angle{15}
     {
         pixels_texture.create(width, height);
         pixels_texture.update(std::data(pixels));
@@ -103,7 +103,7 @@ private:
     auto update_pixels() -> void {
         std::fill(std::begin(pixels), std::end(pixels), 255u);
 
-        auto color = std::array<std::uint8_t, 4>{ 0, 255, 0, 255 };
+        auto color = std::array<std::uint8_t, 4>{ 0, 0, 0, 255 };
         auto [p1, p2, p3, p4] = tetrahedron.vertex;
 
         engine::draw_triangle(pixels, engine::Triangle<T>{{ {{p1.x, p1.y}, {p2.x, p2.y}, {p3.x, p3.y}} }}, color);

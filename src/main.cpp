@@ -7,6 +7,11 @@
 
 #include "sample/rectangle.hpp"
 #include "sample/tetrahedron.hpp"
+#include "sample/perspective_tetrahedron.hpp"
+
+#include "io/obj_reader.hpp"
+
+#include <sstream>
 
 auto main() -> int {
     auto video_mode = sf::VideoMode(800, 600);
@@ -15,8 +20,10 @@ auto main() -> int {
     ImGui::SFML::Init(window);
     auto clock = sf::Clock{};
 
+    engine::io::read("../../wv-obj/tetrahedron.obj");
+
     /* Instantiate template runner */
-    auto runner = Tetrahedron_Runner<1920, 1080>{};
+    auto runner = Perspective_Tetrahedron_Runner<1920, 1080>{};
 
     while (window.isOpen()) {
         auto event = sf::Event{};

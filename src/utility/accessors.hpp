@@ -1,5 +1,5 @@
-#ifndef CPP_ENGINE_CONTAINER_WRAPPER_HPP
-#define CPP_ENGINE_CONTAINER_WRAPPER_HPP
+#ifndef CPP_ENGINE_ACCESSORS_HPP
+#define CPP_ENGINE_ACCESSORS_HPP
 
 #include <type_traits>
 #include <array>
@@ -25,11 +25,11 @@ public:
         return std::size(get_container());
     }
 
-    constexpr auto operator[](std::size_t index) {
+    constexpr auto operator[](std::size_t index) -> auto& {
         return get_container()[index];
     }
 
-    constexpr auto operator[](std::size_t index) const {
+    constexpr auto operator[](std::size_t index) const -> auto const& {
         return get_container()[index];
     }
 
@@ -66,4 +66,4 @@ public:
     }
 };
 
-#endif //CPP_ENGINE_CONTAINER_WRAPPER_HPP
+#endif //CPP_ENGINE_ACCESSORS_HPP

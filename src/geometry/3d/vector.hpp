@@ -1,7 +1,7 @@
 #ifndef CPP_ENGINE_VECTOR_HPP
 #define CPP_ENGINE_VECTOR_HPP
 
-#include "conceptual.hpp"
+#include "../../utility/concepts.hpp"
 
 namespace engine::space3D {
 

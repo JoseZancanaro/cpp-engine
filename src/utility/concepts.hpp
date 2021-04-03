@@ -1,5 +1,5 @@
-#ifndef CPP_ENGINE_CONCEPTUAL_HPP
-#define CPP_ENGINE_CONCEPTUAL_HPP
+#ifndef CPP_ENGINE_CONCEPTS_HPP
+#define CPP_ENGINE_CONCEPTS_HPP
 
 #include <ranges>
 #include <concepts>
@@ -14,4 +14,4 @@ concept Matrix = std::ranges::range<T>;
 
 }
 
-#endif //CPP_ENGINE_CONCEPTUAL_HPP
+#endif //CPP_ENGINE_CONCEPTS_HPP

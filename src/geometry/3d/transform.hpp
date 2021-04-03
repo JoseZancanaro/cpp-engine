@@ -2,7 +2,7 @@
 #define CPP_ENGINE_TRANSFORM_HPP
 
 #include "../axis.hpp"
-#include "../../container_wrapper.hpp"
+#include "../../utility/accessors.hpp"
 
 namespace engine::space3D {
 
@@ -55,15 +55,48 @@ struct Mat4 : Accessors_For<Mat4> {
             { 0,                0,               0, 1 }
         }}};
     }
+
+    static auto simple_perspective(double cp) -> Mat4 {
+        return /*Mat4*/{ .container = {{
+            { 1, 0, 0      , 0 },
+            { 0, 1, 0      , 0 },
+            { 0, 0, 0      , 0 },
+            { 0, 0, 1 / cp , 1 },
+        }}};
+    }
 };
+
+auto operator*(Mat4 const& left, Mat4 const& right) -> Mat4 {
+    auto product = Mat4{};
+
+    for (auto i = 0u; i < std::size(product); ++i) {
+        for (auto j = 0u; j < std::size(product); ++j) {
+            for (auto k = 0u; k < std::size(product); ++k) {
+                product[i][j] += left[i][k] * right[k][j];
+            }
+        }
+    }
+
+    return product;
+}
 
 template <class T>
 auto apply_transform(Vector_3D<T> vec, Mat4 transform) -> Vector_3D<T> {
-    return {
+    auto vector = Vector_3D<T> {
         static_cast<T>(vec.x * transform[0][0] + vec.y * transform[0][1] + vec.z * transform[0][2] + /*vec.w **/ transform[0][3]),
         static_cast<T>(vec.x * transform[1][0] + vec.y * transform[1][1] + vec.z * transform[1][2] + /*vec.w **/ transform[1][3]),
         static_cast<T>(vec.x * transform[2][0] + vec.y * transform[2][1] + vec.z * transform[2][2] + /*vec.w **/ transform[2][3])
     };
+
+    auto w = static_cast<T>(vec.x * transform[3][0] + vec.y * transform[3][1] + vec.z * transform[3][2] + /*vec.w **/ transform[3][3]);
+
+    if (w != T{1}) {
+        vector.x /= w;
+        vector.y /= w;
+        vector.z /= w;
+    }
+
+    return vector;
 }
 
 template <class T>
