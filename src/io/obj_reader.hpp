@@ -15,9 +15,7 @@
 #include "../geometry/core.hpp"
 #include "../utility/result.hpp"
 
-namespace engine::io {
-
-namespace details {
+namespace engine::io::details {
 
 auto trim_view(std::string_view view) -> std::string_view {
     view.remove_prefix(std::min(view.find_first_not_of(' '), std::size(view)));
@@ -38,28 +36,23 @@ auto read_stream_n(Stream && stream, It it, std::size_t n) -> std::size_t {
     auto buffer = Value_Type{};
 
     /* Read stream n successful times */
-    while (count < n && stream.good()) {
-        stream >> buffer;
-
-        if (stream.fail() == false) {
-            *(it++) = buffer;
-            ++count;
-        }
+    while (count < n
+            && (stream >> buffer).fail() == false) {
+        *(it++) = buffer;
+        ++count;
     }
 
     return count;
 }
 
-} // namespace engine::io::details
-
 template <class T = double>
 auto parse_vertex_data(std::string_view view, std::size_t count = 4) -> std::vector<T> {
-    if (auto index = details::find_first_numeric(view); index != std::end(view)) {
+    if (auto index = find_first_numeric(view); index != std::end(view)) {
         view.remove_prefix(std::distance(std::begin(view), index));
 
         auto data = std::vector<T>{};
-        details::read_stream_n<T>(std::istringstream(std::string(view)),
-                                    std::back_inserter(data), count);
+        read_stream_n<T>(std::istringstream(std::string(view)),
+                            std::back_inserter(data), count);
 
         return data;
     }
@@ -67,8 +60,75 @@ auto parse_vertex_data(std::string_view view, std::size_t count = 4) -> std::vec
     return {};
 }
 
-auto parse_tag_vertex(std::string_view view) -> util::Result<Vector_3D<double>, std::string_view> {
-    auto vertex = parse_vertex_data(view);
+template <class Value_Type, class Stream, class It>
+auto parse_face_triple(Stream && stream, It it) -> std::size_t {
+    auto count = 0ul;
+    auto buffer = Value_Type{};
+
+    auto peek_slash = [](auto & stream) -> bool {
+        auto peek = stream.peek();
+        if (peek == '/' && stream.get()) {
+            stream.clear();
+            return true;
+        }
+        return false;
+    };
+
+    /* Parse V index */
+    if ((stream >> buffer).fail() == false) /* [ 1 ] */ {
+        *(it++) = buffer;
+        ++count;
+
+        if (peek_slash(stream)) /* [ 1/ ] */ {
+            /* Parse VT index */
+            if ((stream >> buffer).fail() == false) /* [ 1/1 ]  */ {
+                *(it++) = buffer;
+                ++count;
+            }
+            else /* [ 1/. ] */ {
+                stream.clear();
+                ++it;
+            }
+
+            if (peek_slash(stream)) /* [ 1/./ ] */ {
+                /* Parse VN index */
+                if ((stream >> buffer).fail() == false) /* [ 1/./1 ]  */ {
+                    *(it++) = buffer;
+                    ++count;
+                }
+            }
+        }
+    }
+
+    return count;
+}
+
+template <class T = double>
+auto parse_face_data(std::string_view view) -> typename Solid<T>::Face_Indexer {
+    if (auto index = find_first_numeric(view); index != std::end(view)) {
+        view.remove_prefix(std::distance(std::begin(view), index));
+
+        auto face_idx = typename Solid<T>::Face_Indexer{};
+        auto stream = std::istringstream(std::string(view));
+
+        while (stream.fail() == false && stream.eof() == false) {
+            auto data = std::array<std::size_t, 3>{};
+            auto read = parse_face_triple<int>(stream, std::begin(data));
+
+            if (read > 0) {
+                face_idx.indexes.push_back(data.front());
+            }
+        }
+
+        return face_idx;
+    }
+
+    return {};
+}
+
+template <class T = double>
+auto parse_tag_vertex(std::string_view view) -> util::Result<Vector_3D<T>, std::string_view> {
+    auto vertex = parse_vertex_data<T>(view);
 
     if (std::size(vertex) >= 3) {
         return { .data = { vertex[0], vertex[1], vertex[2] } };
@@ -77,17 +137,24 @@ auto parse_tag_vertex(std::string_view view) -> util::Result<Vector_3D<double>, 
     return { .err = "Malformed vertex data", .is_err = true };
 }
 
-auto read_tag_vertex_normal(std::string_view view) {
+template <class T = double>
+auto read_tag_vertex_normal(std::string_view view) {}
 
+template <class T>
+auto read_tag_face(std::string_view view) -> util::Result<typename Solid<T>::Face_Indexer, std::string_view> {
+    auto face_indexer = parse_face_data(view);
+
+    if (std::size(face_indexer.indexes) > 2) {
+        return { .data = std::move(face_indexer) };
+    }
+
+    return { .err = "Malformed face data", .is_err = true };
 }
 
-auto read_tag_face() {
-
-}
-
-auto parse_wv_obj(std::ifstream & input_file) {
+template <class T = double>
+auto parse_wv_obj(std::ifstream & input_file) -> Solid<T> {
     // 3d model data
-    auto vertex = std::vector<Vector_3D<double>>{};
+    auto solid = Solid<T>{};
 
     // context
     auto buffer = std::string{};
@@ -95,43 +162,48 @@ auto parse_wv_obj(std::ifstream & input_file) {
 
     while (std::getline(input_file, buffer).good()) {
         //fmt::print("{} [Size:{}]\n", buffer, std::size(buffer));
-        auto view = details::trim_view(std::string_view{buffer});
+        auto view = trim_view(std::string_view{buffer});
 
         if (std::size(view) > 2) { /* minimum size for comparison */
             if (view[0] == '#') /* comment */ {}
             else if (view[0] == 'v' && view[1] == ' ') /* vertex */ {
-                if (auto result = parse_tag_vertex(view); result.ok()) {
-                    vertex.push_back(std::move(result.data));
+                if (auto result = parse_tag_vertex<T>(view); result.ok()) {
+                    solid.vertex.push_back(std::move(result.data));
                 }
                 else {
                     fmt::print("Err({} on LINE {})\n", result.err, count);
                 }
             }
-            else if (view[0] == 'v' && view[1] == 'n') /* vertex normal */ {
-
-            }
+            else if (view[0] == 'v' && view[1] == 'n') /* vertex normal */ {}
             else if (view[0] == 'f' && view[1] == ' ') /* face */ {
-
+                if (auto result = read_tag_face<T>(view); result.ok()) {
+                    solid.faces.push_back(std::move(result.data));
+                }
+                else {
+                    fmt::print("Err({} on LINE {})\n", result.err, count);
+                }
             }
         }
 
         ++count;
     }
+
+    return solid;
 }
 
-template<class Path>
-auto read(Path &&p) -> void /* Model_3D? */ {
+} // namespace engine::io::details
+
+namespace engine::io {
+
+template<class Path, class D = double>
+auto read_wavefront(Path && p) -> Solid<D> {
     auto input_file = std::ifstream{p};
 
-    fmt::print("std::fs::exists({}) -> {}\n", p, std::filesystem::exists(p));
-
     if (input_file) {
-        fmt::print("Ok({})\n", p);
-        parse_wv_obj(input_file);
+        return details::parse_wv_obj(input_file);
     }
-    else {
-        fmt::print("Err({})\n", p);
-    }
+
+    return {};
 }
 
 } // namespace engine::io

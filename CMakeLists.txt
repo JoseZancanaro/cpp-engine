@@ -8,14 +8,12 @@ conan_basic_setup()
 
 add_executable(cpp-engine
         src/main.cpp
-        src/utility/concepts.hpp
-        src/utility/accessors.hpp
         src/draw.hpp
         src/pixel-buffer.hpp
-        #[[ Tests ]]
-        src/sample/rectangle.hpp
-        src/sample/tetrahedron.hpp
-        src/sample/perspective_tetrahedron.hpp
+        #[[ Utility ]]
+        src/utility/accessors.hpp
+        src/utility/concepts.hpp
+        src/utility/result.hpp
         #[[ Geometry ]]
         src/geometry/core.hpp
         src/geometry/axis.hpp
@@ -27,5 +25,12 @@ add_executable(cpp-engine
         #[[ 3D Geometry ]]
         src/geometry/3d/vector.hpp
         src/geometry/3d/transform.hpp
-        src/geometry/3d/shapes.hpp src/io/obj_reader.hpp src/utility/result.hpp)
+        src/geometry/3d/shapes.hpp
+        #[[ IO ]]
+        src/io/obj_reader.hpp
+        #[[ Tests ]]
+        src/sample/rectangle.hpp
+        src/sample/tetrahedron.hpp
+        src/sample/perspective_tetrahedron.hpp
+        src/sample/wavefront_runner.hpp )
 target_link_libraries(cpp-engine ${CONAN_LIBS})

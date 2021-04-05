@@ -29,6 +29,15 @@ struct Mat4 : Accessors_For<Mat4> {
         }}};
     }
 
+    static auto scale(double dx, double dy, double dz) -> Mat4 {
+        return /*Mat4*/ { .container = {{
+            { dx, 0,  0,  0 },
+            { 0,  dy, 0,  0 },
+            { 0,  0,  dz, 0 },
+            { 0,  0,  0,  1 },
+        }}};
+    }
+
     static auto rotate(axis::X_t, double angle) -> Mat4 {
         return /*Mat4*/ { .container = {{
             { 1,                0,               0, 0 },
