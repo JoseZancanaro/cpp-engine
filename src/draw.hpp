@@ -10,7 +10,7 @@ namespace engine {
 
 /* ZINGL (2012) */
 template <class P = std::uint8_t, std::size_t C = 4, class T>
-auto discrete_line_plot(Buffer_2D<P, C> & buffer, T x0, T x0, T xn, T yn, std::array<P, C> const& color) -> void {
+auto discrete_line_plot(Buffer_2D<P, C> & buffer, T x0, T y0, T xn, T yn, std::array<P, C> const& color) -> void {
     auto x1 = std::lround(x0), y1 = std::lround(y0);
     auto x2 = std::lround(xn), y2 = std::lround(yn);
 
@@ -46,8 +46,8 @@ auto discrete_line_plot(Buffer_2D<P, C> & buffer, Vector_2D<T> origin, Vector_2D
     discrete_line_plot(buffer, origin.x, origin.y, target.x, target.y, color);
 }
 
-[[deprecated]]
 template <class P = std::uint8_t, std::size_t C = 4, class T>
+[[deprecated]]
 auto bresenham(Buffer_2D<P, C> & buffer, Vector_2D<T> origin, Vector_2D<T> target,
                 std::array<P, C> const& color) -> void {
     if (origin.x > target.x) {
