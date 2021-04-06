@@ -40,10 +40,10 @@ struct Mat4 : Accessors_For<Mat4> {
 
     static auto rotate(axis::X_t, double angle) -> Mat4 {
         return /*Mat4*/ { .container = {{
-            { 1,                0,               0, 0 },
-            { 0, std::cos(angle),  std::sin(angle), 0 },
-            { 0, -std::sin(angle), std::cos(angle), 0 },
-            { 0,                0,               0, 1 }
+            { 1,                0,               0,  0 },
+            { 0,  std::cos(angle),  std::sin(angle), 0 },
+            { 0, -std::sin(angle), std::cos(angle),  0 },
+            { 0,                0,               0,  1 }
         }}};
     }
 
@@ -90,7 +90,7 @@ auto operator*(Mat4 const& left, Mat4 const& right) -> Mat4 {
 }
 
 template <class T>
-auto apply_transform(Vector_3D<T> vec, Mat4 transform) -> Vector_3D<T> {
+auto apply_transform(Vector_3D<T> const& vec, Mat4 const& transform) -> Vector_3D<T> {
     auto vector = Vector_3D<T> {
         static_cast<T>(vec.x * transform[0][0] + vec.y * transform[0][1] + vec.z * transform[0][2] + /*vec.w **/ transform[0][3]),
         static_cast<T>(vec.x * transform[1][0] + vec.y * transform[1][1] + vec.z * transform[1][2] + /*vec.w **/ transform[1][3]),
@@ -109,7 +109,7 @@ auto apply_transform(Vector_3D<T> vec, Mat4 transform) -> Vector_3D<T> {
 }
 
 template <class T>
-auto operator*(Vector_3D<T> vec, Mat4 transform) -> Vector_3D<T> {
+auto operator*(Vector_3D<T> const& vec, Mat4 const& transform) -> Vector_3D<T> {
     return apply_transform(vec, transform);
 }
 

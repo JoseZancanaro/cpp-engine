@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.17)
 project(cpp-engine)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_FLAGS_RELEASE "/Od")
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/build/conanbuildinfo.cmake)
 conan_basic_setup()
@@ -32,5 +33,5 @@ add_executable(cpp-engine
         src/sample/rectangle.hpp
         src/sample/tetrahedron.hpp
         src/sample/perspective_tetrahedron.hpp
-        src/sample/wavefront_runner.hpp )
+        src/sample/wavefront_runner.hpp)
 target_link_libraries(cpp-engine ${CONAN_LIBS})

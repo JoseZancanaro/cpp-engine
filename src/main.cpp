@@ -12,7 +12,7 @@
 #include "io/obj_reader.hpp"
 
 auto main() -> int {
-    auto video_mode = sf::VideoMode(800, 600);
+    auto video_mode = sf::VideoMode(1280, 1024);
     auto window = sf::RenderWindow{video_mode, "cpp-engine"};
 
     ImGui::SFML::Init(window);
@@ -21,7 +21,7 @@ auto main() -> int {
     auto tank = engine::io::read_wavefront("../../wv-obj/tank-i.obj"); // or [tank-ii] (don't)
 
     /* Instantiate template runner */
-    auto runner = Wavefront_Runner<1920, 1080>(std::move(tank));
+    auto runner = Wavefront_Runner<1280, 1024>(std::move(tank));
 
     while (window.isOpen()) {
         auto event = sf::Event{};

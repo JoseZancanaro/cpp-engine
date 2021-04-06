@@ -86,7 +86,7 @@ template <class P = std::uint8_t, std::size_t C = 4, class T>
 auto draw_solid_face(Buffer_2D<P, C> & buffer, Solid<T> solid, std::size_t face, std::array<P, C> const& color) -> void {
     auto const& [ vertex, faces ] = solid;
 
-    if (std::size(faces[face].indexes) > 1) {
+    if (std::size(faces[face].indexes) == 4) {
         for (auto i = 0ul; i < std::size(faces[face].indexes) - 1; ++i) {
             /* draw line from current to next coordinate */
             auto const& current = vertex[faces[face].indexes[i] - 1];

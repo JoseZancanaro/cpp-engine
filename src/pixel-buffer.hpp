@@ -27,14 +27,15 @@ struct Buffer_2D : Accessors_For<Buffer_2D<Pixel_Type, Length>> {
 
     auto set(std::size_t x, std::size_t y, Pixel_Type value) -> void {
         auto index = flat_index(x, y, width, Length);
-        if (index >= 0 && index < std::size(container)) { // @TODO remove check
+        if (x >= 0 && x < width && y >= 0 && y < height) { // @TODO remove check
             container.at() = value;
         }
     }
 
     auto set(std::size_t x, std::size_t y, std::array<Pixel_Type, Length> const& value) -> void {
         auto index = flat_index(x, y, width, Length);
-        if (index >= 0 && index + std::size(value) < std::size(container)) { // @TODO remove check
+        if (x >= 0 && x < width && y >= 0 && y < height
+            && index < std::size(container) - std::size(value)) { // @TODO remove check
             std::copy_n(std::begin(value), std::size(value),
                         std::next(std::begin(container), index)); // data.begin() + flat_index(...)
         }
