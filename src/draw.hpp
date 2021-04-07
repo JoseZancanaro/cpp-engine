@@ -86,7 +86,7 @@ template <class P = std::uint8_t, std::size_t C = 4, class T>
 auto draw_solid_face(Buffer_2D<P, C> & buffer, Solid<T> solid, std::size_t face, std::array<P, C> const& color) -> void {
     auto const& [ vertex, faces ] = solid;
 
-    if (std::size(faces[face].indexes) == 4) {
+    if (std::size(faces[face].indexes) > 2) {
         for (auto i = 0ul; i < std::size(faces[face].indexes) - 1; ++i) {
             /* draw line from current to next coordinate */
             auto const& current = vertex[faces[face].indexes[i] - 1];
@@ -121,8 +121,6 @@ auto draw_triangle(Buffer_2D<P, C> & buffer, Triangle<T> triangle, std::array<P,
     discrete_line_plot(buffer, triangle.vertex[1], triangle.vertex[2], color);
     discrete_line_plot(buffer, triangle.vertex[2], triangle.vertex[0], color);
 }
-
-
 
 template <class P = std::uint8_t, std::size_t C = 4, class T>
 auto draw_solid(Buffer_2D<P, C> & buffer, Solid<T> solid, std::array<P, C> const& color) -> void {

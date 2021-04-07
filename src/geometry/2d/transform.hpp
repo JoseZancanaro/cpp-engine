@@ -6,6 +6,8 @@
 
 namespace engine::space2D {
 
+using engine::operator*; /* so ADL catches from Mat3 usage */
+
 struct Mat3 : Accessors_For<Mat3> {
     using mat3_t = std::array<std::array<double, 3>, 3>;
 

@@ -1,9 +1,15 @@
 #ifndef CPP_ENGINE_TRANSFORM_BASE_HPP
 #define CPP_ENGINE_TRANSFORM_BASE_HPP
 
-#include "../utility/concepts.hpp"
+#include <concepts>
+#include <ranges>
 
 namespace engine {
+
+template <class T>
+concept Matrix = std::ranges::range<T> && requires(T t) {
+    { t[std::size_t{}] } -> std::ranges::range;
+};
 
 template <Matrix T>
 auto operator*(T const& left, T const& right) -> T {

@@ -161,7 +161,6 @@ auto parse_wv_obj(std::ifstream & input_file) -> Solid<T> {
     auto count = 0ul;
 
     while (std::getline(input_file, buffer).good()) {
-        //fmt::print("{} [Size:{}]\n", buffer, std::size(buffer));
         auto view = trim_view(std::string_view{buffer});
 
         if (std::size(view) > 2) { /* minimum size for comparison */

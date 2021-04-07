@@ -1,15 +1,23 @@
 #ifndef CPP_ENGINE_TRANSFORM_HPP
 #define CPP_ENGINE_TRANSFORM_HPP
 
+#include <cmath>
+#include <numbers>
+
 #include "../axis.hpp"
+#include "../transform_base.hpp"
 #include "../../utility/accessors.hpp"
 
 namespace engine::space3D {
+
+using engine::operator*; /* so ADL catches from Mat4 usage */
 
 struct Mat4 : Accessors_For<Mat4> {
     using mat4_t = std::array<std::array<double, 4>, 4>;
 
     mat4_t container;
+
+    static inline double const default_fov = 1 / std::tan(90 / 2.0 * std::numbers::pi / 180);
 
     static auto identity() -> Mat4 {
         return /*Mat4*/ { .container = {{
@@ -67,45 +75,39 @@ struct Mat4 : Accessors_For<Mat4> {
 
     static auto simple_perspective(double cp) -> Mat4 {
         return /*Mat4*/{ .container = {{
-            { 1, 0, 0      , 0 },
-            { 0, 1, 0      , 0 },
-            { 0, 0, 0      , 0 },
-            { 0, 0, 1 / cp , 1 },
+           { 1, 0, 0,      0 },
+           { 0, 1, 0,      0 },
+           { 0, 0, 0,      0 },
+           { 0, 0, 1 / cp, 1 },
+        }}};
+    }
+
+    static auto simple_perspective(double near, double q, double a = 1, double f = default_fov) -> Mat4 {
+        return /*Mat4*/{ .container = {{
+            { a * f, 0, 0,           0 },
+            { 0,     f, 0,           0 },
+            { 0,     0, q,           1 },
+            { 0,     0, -(near * q), 0 },
         }}};
     }
 };
 
-auto operator*(Mat4 const& left, Mat4 const& right) -> Mat4 {
-    auto product = Mat4{};
-
-    for (auto i = 0u; i < std::size(product); ++i) {
-        for (auto j = 0u; j < std::size(product); ++j) {
-            for (auto k = 0u; k < std::size(product); ++k) {
-                product[i][j] += left[i][k] * right[k][j];
-            }
-        }
-    }
-
-    return product;
-}
-
 template <class T>
 auto apply_transform(Vector_3D<T> const& vec, Mat4 const& transform) -> Vector_3D<T> {
-    auto vector = Vector_3D<T> {
-        static_cast<T>(vec.x * transform[0][0] + vec.y * transform[0][1] + vec.z * transform[0][2] + /*vec.w **/ transform[0][3]),
-        static_cast<T>(vec.x * transform[1][0] + vec.y * transform[1][1] + vec.z * transform[1][2] + /*vec.w **/ transform[1][3]),
-        static_cast<T>(vec.x * transform[2][0] + vec.y * transform[2][1] + vec.z * transform[2][2] + /*vec.w **/ transform[2][3])
+    auto out = Vector_3D <T> {
+        T(vec.x * transform[0][0] + vec.y * transform[0][1] + vec.z * transform[0][2] + /*vec.w **/ transform[0][3]),
+        T(vec.x * transform[1][0] + vec.y * transform[1][1] + vec.z * transform[1][2] + /*vec.w **/ transform[1][3]),
+        T(vec.x * transform[2][0] + vec.y * transform[2][1] + vec.z * transform[2][2] + /*vec.w **/ transform[2][3])
     };
 
-    auto w = static_cast<T>(vec.x * transform[3][0] + vec.y * transform[3][1] + vec.z * transform[3][2] + /*vec.w **/ transform[3][3]);
-
-    if (w != T{1}) {
-        vector.x /= w;
-        vector.y /= w;
-        vector.z /= w;
+    if (auto w = T(vec.x * transform[3][0] + vec.y * transform[3][1] + vec.z * transform[3][2] + /*vec.w **/ transform[3][3]);
+        w != T(0)) {
+        out.x /= w;
+        out.y /= w;
+        out.z /= w;
     }
 
-    return vector;
+    return out;
 }
 
 template <class T>
