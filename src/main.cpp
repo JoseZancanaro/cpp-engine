@@ -18,10 +18,9 @@ auto main() -> int {
     auto window = sf::RenderWindow{video_mode, "cpp-engine"};
 
     ImGui::SFML::Init(window);
-    auto clock = sf::Clock{};
 
-    auto tank = engine::io::read_wavefront("../../wv-obj/tank-i.obj"); // or [tank-ii]
-    //tank.norm();
+    auto clock = sf::Clock{};
+    auto tank = engine::io::read_wavefront("../../wv-obj/skull.obj"); // [samples at root/wv-obj]
 
     /* Instantiate template runner */
     auto runner = Wavefront_Runner<WIDTH, HEIGHT>(std::move(tank));
@@ -34,10 +33,6 @@ auto main() -> int {
 
             /* Feed event */
             runner.event_hook(window, event);
-
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            }
         }
 
         ImGui::SFML::Update(window, clock.restart());

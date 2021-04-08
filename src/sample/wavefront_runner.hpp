@@ -2,6 +2,7 @@
 #define CPP_ENGINE_WAVEFRONT_RUNNER_HPP
 
 #include <array>
+#include <execution>
 #include <numbers>
 #include <numeric>
 #include <ranges>
@@ -144,9 +145,8 @@ public:
                     engine::Mat4::identity()
             );
 
-            std::ranges::transform(solid.vertex, std::begin(view.vertex), [transform](auto const& v) {
-                return v * transform;
-            });
+            std::transform(std::execution::par_unseq, std::cbegin(solid.vertex), std::cend(solid.vertex),
+                            std::begin(view.vertex), [transform](auto const& v) { return v * transform; });
 
             update_pixels(view);
         } else if (event.type == sf::Event::MouseButtonPressed) {
@@ -184,6 +184,7 @@ private:
     auto imgui() -> void {
         ImGui::Begin("Debug");
 
+        ImGui::TextColored({ 255, 255, 255, 255 }, "Vertex %lu Faces %lu", std::size(solid.vertex), std::size(solid.faces));
         ImGui::InputDouble("Angle step", &angle_step);
         ImGui::InputDouble("Scale step", &scale_step);
         ImGui::InputDouble("Move step", &move_step);

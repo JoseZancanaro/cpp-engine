@@ -3,6 +3,8 @@
 
 #include <cmath>
 
+#include <fmt/core.h>
+
 #include "pixel-buffer.hpp"
 #include "geometry/2d/vector.hpp"
 
@@ -47,6 +49,25 @@ auto discrete_line_plot(Buffer_2D<P, C> & buffer, Vector_2D<T> origin, Vector_2D
 }
 
 template <class P = std::uint8_t, std::size_t C = 4, class T>
+auto contiguous_line_plot(Buffer_2D<P, C> & buffer, T x0, T y0, T xn, T yn, std::array<P, C> const& color) -> void {
+    auto dx = xn - x0;
+    auto dy = yn - y0;
+
+    auto size = std::abs(dx) + std::abs(dy);
+
+    auto fx = dx / size;
+    auto fy = dy / size;
+
+    for (auto i = 0ul; i < size; ++i) {
+        buffer.set(x0, y0, color);
+        x0 += fx;
+        y0 += fy;
+    }
+
+    buffer.set(x0, y0, color);
+}
+
+template <class P = std::uint8_t, std::size_t C = 4, class T>
 [[deprecated]]
 auto bresenham(Buffer_2D<P, C> & buffer, Vector_2D<T> origin, Vector_2D<T> target,
                 std::array<P, C> const& color) -> void {
@@ -83,7 +104,7 @@ auto bresenham(Buffer_2D<P, C> & buffer, Vector_2D<T> origin, Vector_2D<T> targe
 namespace engine::details {
 
 template <class P = std::uint8_t, std::size_t C = 4, class T>
-auto draw_solid_face(Buffer_2D<P, C> & buffer, Solid<T> solid, std::size_t face, std::array<P, C> const& color) -> void {
+auto draw_solid_face(Buffer_2D<P, C> & buffer, Solid<T> const& solid, std::size_t face, std::array<P, C> const& color) -> void {
     auto const& [ vertex, faces ] = solid;
 
     if (std::size(faces[face].indexes) > 2) {
@@ -123,10 +144,12 @@ auto draw_triangle(Buffer_2D<P, C> & buffer, Triangle<T> triangle, std::array<P,
 }
 
 template <class P = std::uint8_t, std::size_t C = 4, class T>
-auto draw_solid(Buffer_2D<P, C> & buffer, Solid<T> solid, std::array<P, C> const& color) -> void {
-    for (auto face = 0ul; face < std::size(solid.faces); ++face) {
+auto draw_solid(Buffer_2D<P, C> & buffer, Solid<T> const& solid, std::array<P, C> const& color) -> void {
+
+    for (auto face = 0ul; face < std::size(solid.faces); ++face) [[likely]] {
         details::draw_solid_face(buffer, solid, face, color);
     }
+
 }
 
 } // namespace engine
