@@ -1,0 +1,3 @@
+[submodule "wv-obj"]
+	path = wv-obj
+	url = https://github.com/IsraelEfraim/cpp-engine-wv-obj.git
