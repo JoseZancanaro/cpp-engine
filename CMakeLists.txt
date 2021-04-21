@@ -32,5 +32,11 @@ add_executable(cpp-engine
         src/sample/rectangle.hpp
         src/sample/tetrahedron.hpp
         src/sample/perspective_tetrahedron.hpp
-        src/sample/wavefront_runner.hpp)
+        src/sample/wavefront_runner.hpp
+        src/sample/glwavefront_runner.hpp)
+
 target_link_libraries(cpp-engine ${CONAN_LIBS})
+
+# OpenGL
+set(OpenGL opengl32)
+target_link_libraries(cpp-engine ${OpenGL})

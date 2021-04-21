@@ -17,12 +17,12 @@ template <class Pixel_Type, std::size_t Length>
 struct Buffer_2D : Accessors_For<Buffer_2D<Pixel_Type, Length>> {
     using Pixel_Buffer = std::vector<Pixel_Type>;
 
-    std::vector<Pixel_Type> container;
+    Pixel_Buffer container;
     std::size_t width;
     std::size_t height;
 
     Buffer_2D(std::size_t width, std::size_t height, Pixel_Type value = {})
-        : width(width), height(height), container(std::vector<Pixel_Type>(width * height * Length, value))
+        : width(width), height(height), container(Pixel_Buffer(width * height * Length, value))
     {}
 
     auto set(std::size_t x, std::size_t y, Pixel_Type value) -> void {

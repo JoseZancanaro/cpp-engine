@@ -145,11 +145,9 @@ auto draw_triangle(Buffer_2D<P, C> & buffer, Triangle<T> triangle, std::array<P,
 
 template <class P = std::uint8_t, std::size_t C = 4, class T>
 auto draw_solid(Buffer_2D<P, C> & buffer, Solid<T> const& solid, std::array<P, C> const& color) -> void {
-
     for (auto face = 0ul; face < std::size(solid.faces); ++face) [[likely]] {
         details::draw_solid_face(buffer, solid, face, color);
     }
-
 }
 
 } // namespace engine

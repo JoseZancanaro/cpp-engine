@@ -74,7 +74,7 @@ public:
     template <class W, class E>
     auto event_hook(W const& window, E event) -> void {
         if (event.type == sf::Event::KeyPressed) {
-            auto near = 0.1, far = 1000.0, q = far / (far - near);
+            auto n = 0.1, f = 1000.0, q = n / (f - n);
             auto aspect_ratio = height / double{width};
 
             /* Translate */
@@ -126,7 +126,7 @@ public:
                     /* translate away from cp*/
                     //engine::Mat4::translate(-center_x, -center_y, -center_z) *
                     /* perspective */
-                    //engine::Mat4::simple_perspective(near, q, aspect_ratio) *
+                    //engine::Mat4::simple_perspective(n, q, aspect_ratio) *
                     /* move forth */
                     engine::Mat4::translate(center_x, center_y, center_z) *
                     /* translate to pivot */
