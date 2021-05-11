@@ -29,21 +29,50 @@ using Vector_3Df = Vector_3D<float>;
 using Vector_3Dd = Vector_3D<double>;
 
 /* Utility */
-
-template <Number T>
-auto magnitude(Vector_3D<T> const& vector) -> T {
-    return T(std::sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z));
+template <Dim3_Vec U, Dim3_Vec V>
+auto dot_product(U const& u, V const& v) {
+    return u.x * v.x + u.y * v.y + u.z * v.z;
 }
 
-template <Number T>
-auto normalize(Vector_3D<T> const& vector) -> Vector_3D<T> {
-    auto mag = 1 / magnitude(vector);
+template <Dim3_Vec U>
+auto magnitude(U const& u) {
+    return std::sqrt(dot_product(u, u));
+}
 
-    if (mag != T(0)) {
-        return { vector.x * mag, vector.y * mag, vector.z * mag };
+template <Dim3_Vec U>
+auto normalize(U const& u) -> U {
+    if (auto mag = magnitude(u); mag > 0) {
+        auto inv = 1 / mag;
+        return { u.x * inv, u.y * inv, u.z * inv };
     }
 
-    return vector;
+    return u;
+}
+
+template <Dim3_Vec U, Dim3_Vec V>
+auto minus(U const& u, V const& v) -> U {
+    return U{ u.x - v.x, u.y - v.y, u.z - v.z };
+}
+
+template <Dim3_Vec U, Dim3_Vec V>
+auto operator-(U const& u, V const& v) -> U {
+    return minus(u, v);
+}
+
+template <Dim3_Vec U, Dim3_Vec V>
+auto plus(U const& u, V const& v) -> U {
+    return U{ u.x + v.x, u.y + v.y, u.z + v.z };
+}
+
+template <Dim3_Vec U, Dim3_Vec V>
+auto operator+(U const& u, V const& v) -> U {
+    return plus(u, v);
+}
+
+template <Dim3_Vec U, Dim3_Vec V>
+auto distance_squared(U const& u, V const& v) {
+    auto delta = u - v;
+    return dot_product(delta, delta);
 }
 
 template <axis::Axis A>

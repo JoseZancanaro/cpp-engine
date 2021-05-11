@@ -115,6 +115,11 @@ auto operator*(Vector_3D<T> const& vec, Mat4 const& transform) -> Vector_3D<T> {
     return apply_transform(vec, transform);
 }
 
+template <Dim3_Vec U, class T>
+auto scale(U const& u, T a) -> U {
+    return { u.x * a, u.y * a, u.z * a };
+}
+
 } // namespace engine::space3D
 
 #endif //CPP_ENGINE_TRANSFORM_HPP

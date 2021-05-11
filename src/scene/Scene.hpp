@@ -13,6 +13,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/OpenGL.hpp>
 
+#include "../geometry/2d/vector.hpp"
 #include "../io/obj_reader.hpp"
 #include "../rng/core.hpp"
 
@@ -20,6 +21,11 @@
 #include "./Solid_Sphere.hpp"
 
 namespace engine {
+
+template <Dim2_Vec V, Dim2_Vec U, class F>
+auto normalize_position(U const& u, F max_x, F max_y) -> V {
+    return { u.x / max_x * 2 - 1, -(u.y / max_y * 2 - 1) };
+}
 
 class Scene {
     using Window_Ptr = std::unique_ptr<sf::Window>;
@@ -49,7 +55,7 @@ public:
      rng(make_default_generator<float>()),
      m_entities(),
      m_collision_tracker(),
-     m_update(true)
+     m_update(false)
     {
         load();
     }
@@ -71,39 +77,6 @@ private:
         glLoadIdentity();
 
         spawn();
-    }
-
-    auto spawn() -> void {
-        auto random_sphere = [rng = rng]() {
-            auto sphere = std::make_shared<Solid_Sphere>(0.02f, 16, 16);
-            sphere->set_position(rng(), rng(), 0.1f);
-            sphere->set_color({ rng(), rng(), rng() });
-            sphere->set_movement(rng() * 0.3f + 0.7f, normalize(Vector_3Df{ rng(), rng(), 0 }));
-
-            return sphere;
-        };
-
-        for (auto i = 0ul; i < 50; ++i) {
-            m_entities.push_back(random_sphere());
-        }
-
-        /*
-        auto left = std::make_shared<Solid_Sphere>(0.08f, 16, 16);
-        left->set_position(-0.5f, 0.0f, 0.1f);
-        left->set_color({ 0.5f, 0.5f, 0.5f });
-        left->set_movement(1.0f, { 1.0f, 0.0f, 0.0f });
-
-        auto right = std::make_shared<Solid_Sphere>(0.08f, 16, 16);
-        right->set_position(0.5f, 0.0f, 0.1f);
-        right->set_color({ 0.9f, 0.9f, 0.9f });
-        right->set_movement(1.0f, { -1.0f, 0.0f, 0.0f });
-
-        m_entities.push_back(left);
-        m_entities.push_back(right);
-        */
-
-        m_collision_tracker.resize(std::size(m_entities));
-        std::ranges::fill(m_collision_tracker, -1);
     }
 
     auto event_loop() -> void {
@@ -145,7 +118,7 @@ private:
 
     auto render() -> void {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.74112f, 0.74112f, 0.74112f, 1.f);
+        glClearColor(0.95112f, 0.95112f, 0.95112f, 1.f);
 
         glPushMatrix();
         std::ranges::for_each(m_entities, [](auto const& e){ e->draw(); });
@@ -154,42 +127,79 @@ private:
         glPushMatrix();
     }
 
+    auto spawn() -> void {
+        auto random_color = [rng = rng]() -> Vector_3Df {
+            return { rng() * 0.86f, rng() * 0.86f, rng() * 0.86f };
+        };
+
+        auto random_sphere = [rng = rng, random_color]() {
+            auto sphere = std::make_shared<Solid_Sphere>(rng() * 0.015f + 0.02f, 16, 16);
+            sphere->set_position(0.0f, 0.0f, 0.1f);
+            //sphere->set_position(rng() * 2 - 1, rng() * 2 - 1, 0.1f);
+            sphere->set_color(random_color());
+            sphere->set_movement(rng() * 0.3f + 0.7f, normalize(Vector_3Df{ rng() * 2 - 1, rng() * 2 - 1, 0 }));
+            return sphere;
+        };
+
+        /* Setup fixed spheres */
+        /* top_left moving bottom_right */
+        auto left = std::make_shared<Solid_Sphere>(0.04f, 16, 16);
+        left->set_position(-0.5f, 0.5f, 0.1f);
+        left->set_color(random_color());
+        left->set_movement(1.0f, normalize(Vector_3Df{ 1.0f, -1.0f, 0.0f }));
+
+        /* bottom_right moving top_left */
+        auto right = std::make_shared<Solid_Sphere>(0.04f, 16, 16);
+        right->set_position(0.5f, -0.5f, 0.1f);
+        right->set_color(random_color());
+        right->set_movement(1.0f, normalize(Vector_3Df{ -1.0f, 1.0f, 0.0f }));
+
+        m_entities.push_back(left);
+        m_entities.push_back(right);
+
+        /* Setup random spheres */
+        for (auto i = 0ul; i < 100; ++i) {
+            m_entities.push_back(random_sphere());
+        }
+
+        /* Setup collision tracker */
+        m_collision_tracker.resize(std::size(m_entities));
+        std::ranges::fill(m_collision_tracker, -1);
+    }
+
     /* Assumes Entities are spheres from Solid_Sphere */
     auto handle_collisions() -> void {
         using namespace std::chrono_literals;
 
         auto collides = [](Solid_Sphere const* a, Solid_Sphere const* b) -> bool {
-            auto distance = std::sqrt(std::pow(a->m_position.x - b->m_position.x, 2) +
-                                std::pow(a->m_position.y - b->m_position.y, 2) +
-                                std::pow(a->m_position.z - b->m_position.z, 2));
+            return distance_squared(a->m_position, b->m_position) < std::pow(a->m_radius + b->m_radius, 2);
+        };
 
-            return distance <= a->m_radius + b->m_radius;
+        auto project = []<Dim3_Vec U, Dim3_Vec V>(U const& u, V const& v) {
+            return scale(v, dot_product(u, v) / dot_product(v, v));
         };
 
         /* Nice O(N²) loop */
-        for (auto i = 0ul; i < std::size(m_entities); ++i) {
+        for (auto i = 1ul; i < std::size(m_entities); ++i) {
             auto left = dynamic_cast<Solid_Sphere*>(m_entities[i].get());
-            bool collided = false;
 
-            for (auto j = 0ul; j < std::size(m_entities); ++j) {
-                if (i != j) {
-                    auto right = dynamic_cast<Solid_Sphere*>(m_entities[j].get());
+            for (auto j = 0ul; j < i; ++j) {
+                auto right = dynamic_cast<Solid_Sphere*>(m_entities[j].get());
 
-                    if (collides(left, right)) {
-                        if (m_collision_tracker[i] != j) {
-                            //fmt::print("[B] {} | {} {} {}!\n", left->m_speed, left->m_orientation.x, left->m_orientation.y, left->m_orientation.z);
-                            left->m_orientation = { -left->m_orientation.x, -left->m_orientation.y, -left->m_orientation.z };
-                            //right->m_orientation = { -right->m_orientation.x, -right->m_orientation.y, -right->m_orientation.z };
-                            m_collision_tracker[i] = j;
-                            //m_collision_tracker[j] = i;
-                            collided = true;
-                            //fmt::print("[A] {} | {} {} {}!\n", left->m_speed, left->m_orientation.x, left->m_orientation.y, left->m_orientation.z);
-                        }
-                    } else {
-                        if (m_collision_tracker[i] == j) {
-                            m_collision_tracker[i] = -1;
-                        }
+                if (collides(left, right)) {
+                    if (m_collision_tracker[i] != j && m_collision_tracker[j] != i) {
+                        auto v1 = left->m_orientation;
+                        auto v2 = right->m_orientation;
+
+                        left->set_movement(left->m_speed, v1 + project(v2, v2 - v1) - project(v1, v1 - v2));
+                        right->set_movement(right->m_speed, v2 + project(v1, v2 - v1) - project(v2, v1 - v2));
+
+                        m_collision_tracker[i] = j;
+                        m_collision_tracker[j] = i;
                     }
+                } else {
+                    if (m_collision_tracker[i] == j) { m_collision_tracker[i] = -1; }
+                    if (m_collision_tracker[j] == i) { m_collision_tracker[j] = -1; }
                 }
             }
         }
