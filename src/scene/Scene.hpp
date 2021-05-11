@@ -27,8 +27,18 @@ auto normalize_position(U const& u, F max_x, F max_y) -> V {
     return { u.x / max_x * 2 - 1, -(u.y / max_y * 2 - 1) };
 }
 
+template <Dim3_Vec U, Dim3_Vec V, class F>
+auto sphere_sphere(U const& u, F r1, V const& v, F r2) -> bool {
+    return distance_squared(u, v) < std::pow(r1 + r2, 2);
+};
+
+auto sphere_sphere(Solid_Sphere const* a, Solid_Sphere const* b) -> bool {
+    return sphere_sphere(a->m_position, a->m_radius, b->m_position, b->m_radius);
+};
+
 class Scene {
     using Window_Ptr = std::unique_ptr<sf::Window>;
+    using Entity_Ptr = std::shared_ptr<Entity_Base>;
 
 public:
     Window_Ptr m_window;
@@ -62,6 +72,7 @@ public:
 
     /* Main loop */
     auto start() -> void {
+        m_window->setFramerateLimit(60);
         m_window->setActive(true);
         event_loop();
     }
@@ -128,14 +139,34 @@ private:
     }
 
     auto spawn() -> void {
+        auto static_position_factory = []([[maybe_unused]] float radius) {
+            return Vector_3Df { 0.0f, 0.0f, 0.1f };
+        };
+
+        auto position_factory = [rng = rng, &entities = m_entities](float radius) {
+            auto would_collide = [&entities]<Dim3_Vec U, class F>(U const& u, F radius) {
+                return std::ranges::any_of(entities, [&u, radius](Entity_Ptr entity) {
+                    auto sphere = dynamic_cast<Solid_Sphere*>(entity.get());
+                    return sphere_sphere(u, radius, sphere->m_position, sphere->m_radius);
+                });
+            };
+
+            auto position = Vector_3Df{ 0.0f, 0.0f, 0.1f };
+            do {
+                position.x = rng() * 2 - 1;
+                position.y = rng() * 2 - 1;
+            } while (would_collide(position, radius));
+
+            return position;
+        };
+
         auto random_color = [rng = rng]() -> Vector_3Df {
             return { rng() * 0.86f, rng() * 0.86f, rng() * 0.86f };
         };
 
-        auto random_sphere = [rng = rng, random_color]() {
+        auto random_sphere = [rng = rng, random_color, factory = static_position_factory]() {
             auto sphere = std::make_shared<Solid_Sphere>(rng() * 0.015f + 0.02f, 16, 16);
-            sphere->set_position(0.0f, 0.0f, 0.1f);
-            //sphere->set_position(rng() * 2 - 1, rng() * 2 - 1, 0.1f);
+            sphere->set_position(factory(sphere->m_radius));
             sphere->set_color(random_color());
             sphere->set_movement(rng() * 0.3f + 0.7f, normalize(Vector_3Df{ rng() * 2 - 1, rng() * 2 - 1, 0 }));
             return sphere;
@@ -143,7 +174,7 @@ private:
 
         /* Setup fixed spheres */
         /* top_left moving bottom_right */
-        auto left = std::make_shared<Solid_Sphere>(0.04f, 16, 16);
+        auto left = std::make_shared<Solid_Sphere>(0.06f, 16, 16);
         left->set_position(-0.5f, 0.5f, 0.1f);
         left->set_color(random_color());
         left->set_movement(1.0f, normalize(Vector_3Df{ 1.0f, -1.0f, 0.0f }));
@@ -171,12 +202,36 @@ private:
     auto handle_collisions() -> void {
         using namespace std::chrono_literals;
 
-        auto collides = [](Solid_Sphere const* a, Solid_Sphere const* b) -> bool {
-            return distance_squared(a->m_position, b->m_position) < std::pow(a->m_radius + b->m_radius, 2);
+        auto simple_response = [](Solid_Sphere * left, Solid_Sphere * right) {
+            auto project = []<Dim3_Vec U, Dim3_Vec V>(U const& u, V const& v) {
+                return scale(v, dot_product(u, v) / dot_product(v, v));
+            };
+
+            auto v1 = left->m_orientation;
+            auto v2 = right->m_orientation;
+
+            left->set_movement(left->m_speed, v1 + project(v2, v2 - v1) - project(v1, v1 - v2));
+            right->set_movement(right->m_speed, v2 + project(v1, v2 - v1) - project(v2, v1 - v2));
         };
 
-        auto project = []<Dim3_Vec U, Dim3_Vec V>(U const& u, V const& v) {
-            return scale(v, dot_product(u, v) / dot_product(v, v));
+        auto advanced_response = [](Solid_Sphere * left, Solid_Sphere * right) {
+            auto v1 = left->m_orientation;
+            auto v2 = right->m_orientation;
+
+            auto delta = normalize(v1 - v2);
+            auto x1 = dot_product(delta, v1);
+            auto v1x = scale(delta, x1);
+            auto v1y = v1 - v1x;
+            auto m1 = left->m_radius;
+
+            auto inv_delta = scale(delta, -1);
+            auto x2 = dot_product(inv_delta, v2);
+            auto v2x = scale(inv_delta, x2);
+            auto v2y = v2 - v2x;
+            auto m2 = right->m_radius;
+
+            left->m_orientation = scale(v1x, (m1 - m2) / (m1 + m2)) + scale(v2x, (2 * m2) / (m1 + m2)) + v1y;
+            right->m_orientation = scale(v1x, (2 * m1) / (m1 + m2)) + scale(v2x, (m1 - m2) / (m1 + m2)) + v2y;
         };
 
         /* Nice O(N²) loop */
@@ -186,13 +241,9 @@ private:
             for (auto j = 0ul; j < i; ++j) {
                 auto right = dynamic_cast<Solid_Sphere*>(m_entities[j].get());
 
-                if (collides(left, right)) {
+                if (sphere_sphere(left, right)) {
                     if (m_collision_tracker[i] != j && m_collision_tracker[j] != i) {
-                        auto v1 = left->m_orientation;
-                        auto v2 = right->m_orientation;
-
-                        left->set_movement(left->m_speed, v1 + project(v2, v2 - v1) - project(v1, v1 - v2));
-                        right->set_movement(right->m_speed, v2 + project(v1, v2 - v1) - project(v2, v1 - v2));
+                        simple_response(left, right);
 
                         m_collision_tracker[i] = j;
                         m_collision_tracker[j] = i;

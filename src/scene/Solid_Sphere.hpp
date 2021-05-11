@@ -68,6 +68,10 @@ public:
         m_position = { x, y, z };
     }
 
+    auto set_position(Vector_3Df const& u) -> void {
+        m_position = u;
+    }
+
     auto set_movement(float speed, Vector_3Df const& orientation) -> void {
         m_speed = speed;
         m_orientation = orientation;
