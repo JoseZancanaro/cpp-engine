@@ -138,11 +138,13 @@ auto parse_tag_vertex(std::string_view view) -> util::Result<Vector_3D<T>, std::
 }
 
 template <class T = double>
-auto read_tag_vertex_normal(std::string_view view) {}
+auto read_tag_vertex_normal(std::string_view view) {
+
+}
 
 template <class T>
 auto read_tag_face(std::string_view view) -> util::Result<typename Solid<T>::Face_Indexer, std::string_view> {
-    auto face_indexer = parse_face_data(view);
+    auto face_indexer = parse_face_data<T>(view);
 
     if (std::size(face_indexer.indexes) > 2) {
         return { .data = std::move(face_indexer) };
@@ -173,7 +175,9 @@ auto parse_wv_obj(std::ifstream & input_file) -> Solid<T> {
                     fmt::print("Err({} on LINE {})\n", result.err, count);
                 }
             }
-            else if (view[0] == 'v' && view[1] == 'n') /* vertex normal */ {}
+            else if (view[0] == 'v' && view[1] == 'n') /* vertex normal */ {
+
+            }
             else if (view[0] == 'f' && view[1] == ' ') /* face */ {
                 if (auto result = read_tag_face<T>(view); result.ok()) {
                     solid.faces.push_back(std::move(result.data));
@@ -194,12 +198,12 @@ auto parse_wv_obj(std::ifstream & input_file) -> Solid<T> {
 
 namespace engine::io {
 
-template<class Path, class D = double>
+template<class D = double, class Path>
 auto read_wavefront(Path && p) -> Solid<D> {
     auto input_file = std::ifstream{p};
 
     if (input_file) {
-        return details::parse_wv_obj(input_file);
+        return details::parse_wv_obj<D>(input_file);
     }
 
     return {};

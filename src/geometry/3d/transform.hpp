@@ -82,12 +82,12 @@ struct Mat4 : Accessors_For<Mat4> {
         }}};
     }
 
-    static auto simple_perspective(double near, double q, double a = 1, double f = default_fov) -> Mat4 {
+    static auto simple_perspective(double n, double q, double a = 1, double f = default_fov) -> Mat4 {
         return /*Mat4*/{ .container = {{
             { a * f, 0, 0,           0 },
             { 0,     f, 0,           0 },
             { 0,     0, q,           1 },
-            { 0,     0, -(near * q), 0 },
+            { 0,     0, -(n * q), 0 },
         }}};
     }
 };
@@ -113,6 +113,11 @@ auto apply_transform(Vector_3D<T> const& vec, Mat4 const& transform) -> Vector_3
 template <class T>
 auto operator*(Vector_3D<T> const& vec, Mat4 const& transform) -> Vector_3D<T> {
     return apply_transform(vec, transform);
+}
+
+template <Dim3_Vec U, class T>
+auto scale(U const& u, T a) -> U {
+    return { u.x * a, u.y * a, u.z * a };
 }
 
 } // namespace engine::space3D

@@ -2,6 +2,7 @@
 #define CPP_ENGINE_WAVEFRONT_RUNNER_HPP
 
 #include <array>
+#include <execution>
 #include <numbers>
 #include <numeric>
 #include <ranges>
@@ -12,9 +13,9 @@
 
 #include <SFML/Graphics.hpp>
 
-#include "../geometry/core.hpp"
-#include "../pixel-buffer.hpp"
-#include "../draw.hpp"
+#include "../../geometry/core.hpp"
+#include "../../pixel-buffer.hpp"
+#include "../../draw.hpp"
 
 template <std::size_t width, std::size_t height, class T = double>
 class Wavefront_Runner {
@@ -73,7 +74,7 @@ public:
     template <class W, class E>
     auto event_hook(W const& window, E event) -> void {
         if (event.type == sf::Event::KeyPressed) {
-            auto near = 0.1, far = 1000.0, q = far / (far - near);
+            auto n = 0.1, f = 1000.0, q = n / (f - n);
             auto aspect_ratio = height / double{width};
 
             /* Translate */
@@ -125,7 +126,7 @@ public:
                     /* translate away from cp*/
                     //engine::Mat4::translate(-center_x, -center_y, -center_z) *
                     /* perspective */
-                    //engine::Mat4::simple_perspective(near, q, aspect_ratio) *
+                    //engine::Mat4::simple_perspective(n, q, aspect_ratio) *
                     /* move forth */
                     engine::Mat4::translate(center_x, center_y, center_z) *
                     /* translate to pivot */
@@ -144,9 +145,8 @@ public:
                     engine::Mat4::identity()
             );
 
-            std::ranges::transform(solid.vertex, std::begin(view.vertex), [transform](auto const& v) {
-                return v * transform;
-            });
+            std::transform(std::execution::par_unseq, std::cbegin(solid.vertex), std::cend(solid.vertex),
+                            std::begin(view.vertex), [transform](auto const& v) { return v * transform; });
 
             update_pixels(view);
         } else if (event.type == sf::Event::MouseButtonPressed) {
@@ -184,6 +184,7 @@ private:
     auto imgui() -> void {
         ImGui::Begin("Debug");
 
+        ImGui::TextColored({ 255, 255, 255, 255 }, "Vertex %lu Faces %lu", std::size(solid.vertex), std::size(solid.faces));
         ImGui::InputDouble("Angle step", &angle_step);
         ImGui::InputDouble("Scale step", &scale_step);
         ImGui::InputDouble("Move step", &move_step);

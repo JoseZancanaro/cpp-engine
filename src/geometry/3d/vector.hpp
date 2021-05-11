@@ -1,6 +1,7 @@
 #ifndef CPP_ENGINE_VECTOR_HPP
 #define CPP_ENGINE_VECTOR_HPP
 
+#include <cmath>
 #include <type_traits>
 
 #include "../axis.hpp"
@@ -26,6 +27,53 @@ struct Vector_3D {
 using Vector_3Di = Vector_3D<int>;
 using Vector_3Df = Vector_3D<float>;
 using Vector_3Dd = Vector_3D<double>;
+
+/* Utility */
+template <Dim3_Vec U, Dim3_Vec V>
+auto dot_product(U const& u, V const& v) {
+    return u.x * v.x + u.y * v.y + u.z * v.z;
+}
+
+template <Dim3_Vec U>
+auto magnitude(U const& u) {
+    return std::sqrt(dot_product(u, u));
+}
+
+template <Dim3_Vec U>
+auto normalize(U const& u) -> U {
+    if (auto mag = magnitude(u); mag > 0) {
+        auto inv = 1 / mag;
+        return { u.x * inv, u.y * inv, u.z * inv };
+    }
+
+    return u;
+}
+
+template <Dim3_Vec U, Dim3_Vec V>
+auto minus(U const& u, V const& v) -> U {
+    return U{ u.x - v.x, u.y - v.y, u.z - v.z };
+}
+
+template <Dim3_Vec U, Dim3_Vec V>
+auto operator-(U const& u, V const& v) -> U {
+    return minus(u, v);
+}
+
+template <Dim3_Vec U, Dim3_Vec V>
+auto plus(U const& u, V const& v) -> U {
+    return U{ u.x + v.x, u.y + v.y, u.z + v.z };
+}
+
+template <Dim3_Vec U, Dim3_Vec V>
+auto operator+(U const& u, V const& v) -> U {
+    return plus(u, v);
+}
+
+template <Dim3_Vec U, Dim3_Vec V>
+auto distance_squared(U const& u, V const& v) {
+    auto delta = u - v;
+    return dot_product(delta, delta);
+}
 
 template <axis::Axis A>
 struct less_t {};

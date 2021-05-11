@@ -25,11 +25,11 @@ public:
         return std::size(get_container());
     }
 
-    constexpr auto operator[](std::size_t index) -> auto& {
+    inline constexpr auto operator[](std::size_t index) -> auto& {
         return get_container()[index];
     }
 
-    constexpr auto operator[](std::size_t index) const -> auto const& {
+    inline constexpr auto operator[](std::size_t index) const -> auto const& {
         return get_container()[index];
     }
 

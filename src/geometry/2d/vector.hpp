@@ -5,6 +5,12 @@
 
 namespace engine::space2D {
 
+template <class V>
+concept Dim2_Vec = requires(std::remove_cvref_t<V> v) {
+    { v.x } -> Number;
+    { v.y } -> Number;
+};
+
 template <Number T>
 struct Vector_2D {
     T x;
