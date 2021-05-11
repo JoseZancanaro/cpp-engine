@@ -10,9 +10,9 @@
 #include <SFML/Graphics.hpp>
 #include <SFMl/OpenGL.hpp>
 
-#include "../geometry/core.hpp"
-#include "../pixel-buffer.hpp"
-#include "../draw.hpp"
+#include "../../geometry/core.hpp"
+#include "../../pixel-buffer.hpp"
+#include "../../draw.hpp"
 
 template <std::size_t width, std::size_t height, class T = double>
 class Gl_Wavefront_Runner {

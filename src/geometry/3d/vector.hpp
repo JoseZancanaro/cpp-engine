@@ -1,6 +1,7 @@
 #ifndef CPP_ENGINE_VECTOR_HPP
 #define CPP_ENGINE_VECTOR_HPP
 
+#include <cmath>
 #include <type_traits>
 
 #include "../axis.hpp"
@@ -26,6 +27,24 @@ struct Vector_3D {
 using Vector_3Di = Vector_3D<int>;
 using Vector_3Df = Vector_3D<float>;
 using Vector_3Dd = Vector_3D<double>;
+
+/* Utility */
+
+template <Number T>
+auto magnitude(Vector_3D<T> const& vector) -> T {
+    return T(std::sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z));
+}
+
+template <Number T>
+auto normalize(Vector_3D<T> const& vector) -> Vector_3D<T> {
+    auto mag = 1 / magnitude(vector);
+
+    if (mag != T(0)) {
+        return { vector.x * mag, vector.y * mag, vector.z * mag };
+    }
+
+    return vector;
+}
 
 template <axis::Axis A>
 struct less_t {};

@@ -28,12 +28,18 @@ add_executable(cpp-engine
         src/geometry/3d/shapes.hpp
         #[[ IO ]]
         src/io/obj_reader.hpp
+        #[[ RNG ]]
+        src/rng/core.hpp
+        #[[ Scene ]]
+        src/scene/Scene.hpp
+        src/scene/Entity_Base.hpp
+        src/scene/Solid_Sphere.hpp
         #[[ Tests ]]
-        src/sample/rectangle.hpp
-        src/sample/tetrahedron.hpp
-        src/sample/perspective_tetrahedron.hpp
-        src/sample/wavefront_runner.hpp
-        src/sample/glwavefront_runner.hpp)
+        src/scene/sample/rectangle.hpp
+        src/scene/sample/tetrahedron.hpp
+        src/scene/sample/perspective_tetrahedron.hpp
+        src/scene/sample/wavefront_runner.hpp
+        src/scene/sample/glwavefront_runner.hpp)
 
 target_link_libraries(cpp-engine ${CONAN_LIBS})
 
