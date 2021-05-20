@@ -26,36 +26,39 @@ protected:
     std::vector<float> m_vertex;
     std::vector<std::uint16_t> m_indexes;
 
-    float m_angle;
-
 public:
     Model(Solid<float> const& solid) :
      m_vbo_handles(),
      m_vertex_count(std::size(solid.vertex)),
      m_indexes_count(),
      m_vertex(m_vertex_count * 3),  // vertex count * (x y z)
-     m_indexes(), // indexes count * quad
-     m_angle()
+     m_indexes() // indexes count * quad
     {
         /* Copy contiguous vertex vector */
         std::memcpy(std::data(m_vertex), std::data(solid.vertex), sizeof(float) * 3 * m_vertex_count);
 
         /* Copy non-contiguous indexes vector as triangles */
-        for (auto i = 0ul; i < m_indexes_count; ++i) {
-            if (auto length = std::size(solid.faces[i].indexes); length == 3) {
-                // Already a triangle
-                m_indexes.push_back(solid.faces[i].indexes[0]);
-                m_indexes.push_back(solid.faces[i].indexes[1]);
-                m_indexes.push_back(solid.faces[i].indexes[2]);
-            }
-            else (length == 4) { 
-                m_indexes.push_back(solid.faces[i].indexes[0]);
-                m_indexes.push_back(solid.faces[i].indexes[1]);
-                m_indexes.push_back(solid.faces[i].indexes[2]);
+        for (auto i = 0ul; i < std::size(solid.faces); ++i) {
+            if (auto length = std::size(solid.faces[i].indexes); length == 3) { // a triangle
+                m_indexes_count += 1;
 
-                m_indexes.push_back(solid.faces[i].indexes[0]);
-                m_indexes.push_back(solid.faces[i].indexes[2]);
-                m_indexes.push_back(solid.faces[i].indexes[3]);
+                // push 0-1-2
+                m_indexes.push_back(solid.faces[i].indexes[0] - 1);
+                m_indexes.push_back(solid.faces[i].indexes[1] - 1);
+                m_indexes.push_back(solid.faces[i].indexes[2] - 1);
+            }
+            else if (length == 4) { // a quad
+                m_indexes_count += 2;
+
+                // push 0-1-2
+                m_indexes.push_back(solid.faces[i].indexes[0] - 1);
+                m_indexes.push_back(solid.faces[i].indexes[1] - 1);
+                m_indexes.push_back(solid.faces[i].indexes[2] - 1);
+
+                // push 0-2-3
+                m_indexes.push_back(solid.faces[i].indexes[0] - 1);
+                m_indexes.push_back(solid.faces[i].indexes[2] - 1);
+                m_indexes.push_back(solid.faces[i].indexes[3] - 1);
             }
         }
     }
@@ -78,14 +81,6 @@ public:
     };
 
     auto draw() -> void override {
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-
-        glLoadIdentity();
-        glScalef(0.01f, 0.01f, 0.01f);
-        glRotatef(angle, 0.0f, 1.0f, 0.0f);
-        glColor3f(1.0f, 0.0f, 0.0f);
-
         glEnableClientState(GL_VERTEX_ARRAY);
 
         glBindBuffer(GL_ARRAY_BUFFER, m_vbo_handles[0]);
@@ -97,13 +92,7 @@ public:
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glDisableClientState(GL_VERTEX_ARRAY);
-
-        glPopMatrix();
     };
-
-    auto update(float seconds) -> void override {
-        angle += 15.0f * std::numbers::pi_v<float> / 180.0f * seconds * 60.0f;
-    }
 
     ~Model() override = default;
 };
