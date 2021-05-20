@@ -1,0 +1,8 @@
+//
+// Created by Efraim on 5/19/2021.
+//
+
+#ifndef CPP_ENGINE_ENTITY_OWNER_HPP
+#define CPP_ENGINE_ENTITY_OWNER_HPP
+
+#endif //CPP_ENGINE_ENTITY_OWNER_HPP
