@@ -7,7 +7,7 @@
 
 #include <fmt/core.h>
 
-#include <SFML/OpenGL.hpp>
+#include "../gl.hpp"
 
 #include "../geometry/3d/vector.hpp"
 #include "./Entity_Base.hpp"
@@ -96,7 +96,7 @@ public:
         glPopMatrix();
     }
 
-    virtual auto update(float seconds) -> void override {
+    auto update(float seconds) -> void override {
         auto [x, y, z] = m_position;
 
         auto i = x + m_speed * m_orientation.x * seconds;
@@ -121,7 +121,7 @@ public:
         m_position = { i, j, k };
     }
 
-    virtual ~Solid_Sphere() = default;
+    ~Solid_Sphere() override = default;
 };
 
 }

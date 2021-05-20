@@ -11,21 +11,18 @@
 #include <fmt/core.h>
 
 #include <SFML/Graphics.hpp>
-#include <SFML/OpenGL.hpp>
+#include "../gl.hpp"
 
 #include "../geometry/2d/vector.hpp"
 #include "../io/obj_reader.hpp"
 #include "../rng/core.hpp"
 
 #include "./Entity_Base.hpp"
+#include "./Model.hpp"
+#include "./Entity_Owner.hpp"
 #include "./Solid_Sphere.hpp"
 
 namespace engine {
-
-template <Dim2_Vec V, Dim2_Vec U, class F>
-auto normalize_position(U const& u, F max_x, F max_y) -> V {
-    return { u.x / max_x * 2 - 1, -(u.y / max_y * 2 - 1) };
-}
 
 template <Dim3_Vec U, Dim3_Vec V, class F>
 auto sphere_sphere(U const& u, F r1, V const& v, F r2) -> bool {
@@ -79,6 +76,7 @@ public:
 
 private:
     auto load() -> void {
+        glewInit();
         glViewport(0, 0, m_width, m_height);
 
         glMatrixMode(GL_PROJECTION);
@@ -124,7 +122,7 @@ private:
 
     auto update(sf::Time elapsed) -> void {
         std::ranges::for_each(m_entities, [elapsed = elapsed.asSeconds()](auto const& e) { e->update(elapsed); });
-        handle_collisions();
+        //handle_collisions();
     }
 
     auto render() -> void {
@@ -139,6 +137,24 @@ private:
     }
 
     auto spawn() -> void {
+        //spawn_spheres();
+        spawn_vbos();
+    }
+
+    auto spawn_vbos() -> void {
+        auto model = std::make_shared<Model>(io::read_wavefront<float>("../../wv-obj/tank-i.obj"));
+        model->load();
+
+        auto e1 = std::make_shared<Entity_Owner>(model, Vector_3Df{ 0.0f,   0.0f,  0.1f });
+        auto e2 = std::make_shared<Entity_Owner>(model, Vector_3Df{ -0.25f, 0.25f, 0.1f });
+        auto e3 = std::make_shared<Entity_Owner>(model, Vector_3Df{ 0.25f, -0.25f, 0.1f });
+
+        m_entities.push_back(e1);
+        m_entities.push_back(e2);
+        m_entities.push_back(e3);
+    }
+
+    auto spawn_spheres() -> void {
         auto static_position_factory = []([[maybe_unused]] float radius) {
             return Vector_3Df { 0.0f, 0.0f, 0.1f };
         };

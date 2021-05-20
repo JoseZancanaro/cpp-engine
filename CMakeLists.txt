@@ -8,6 +8,7 @@ conan_basic_setup()
 
 add_executable(cpp-engine
         src/main.cpp
+        src/gl.hpp
         src/draw.hpp
         src/pixel-buffer.hpp
         #[[ Utility ]]
@@ -39,10 +40,10 @@ add_executable(cpp-engine
         src/scene/sample/tetrahedron.hpp
         src/scene/sample/perspective_tetrahedron.hpp
         src/scene/sample/wavefront_runner.hpp
-        src/scene/sample/glwavefront_runner.hpp)
+        src/scene/sample/glwavefront_runner.hpp src/scene/Buffered_Entity_Base.hpp src/scene/Model.hpp src/scene/Entity_Owner.hpp)
 
 target_link_libraries(cpp-engine ${CONAN_LIBS})
 
 # OpenGL
-set(OpenGL opengl32)
-target_link_libraries(cpp-engine ${OpenGL})
+#set(OpenGL opengl32)
+#target_link_libraries(cpp-engine ${OpenGL})
