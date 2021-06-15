@@ -90,7 +90,7 @@ public:
 
     template <class W>
     auto render(W & window) -> void {
-        window.draw(pixels_sprite);
+        window.render(pixels_sprite);
     }
 
 private:

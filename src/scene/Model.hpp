@@ -80,7 +80,7 @@ public:
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     };
 
-    auto draw() -> void override {
+    auto render() -> void override {
         glEnableClientState(GL_VERTEX_ARRAY);
 
         glBindBuffer(GL_ARRAY_BUFFER, m_vbo_handles[0]);
