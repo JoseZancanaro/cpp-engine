@@ -81,7 +81,7 @@ public:
         m_color = color;
     }
 
-    virtual auto draw() -> void override {
+    virtual auto render() -> void override {
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
 

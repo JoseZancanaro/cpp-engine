@@ -28,7 +28,7 @@ public:
      m_angle()
     {}
 
-    auto draw() -> void override {
+    auto render() -> void override {
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
 
@@ -38,7 +38,7 @@ public:
         glRotatef(m_angle, 0.0f, 1.0f, 0.0f);
         glColor3f(1.0f, 0.0f, 0.0f);
 
-        m_model->draw();
+        m_model->render();
 
         glPopMatrix();
     }

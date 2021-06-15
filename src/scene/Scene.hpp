@@ -13,6 +13,10 @@
 #include <SFML/Graphics.hpp>
 #include "../gl.hpp"
 
+#include "./shader/core.hpp"
+#include "../gl-shaders/basic_vs.hpp"
+#include "../gl-shaders/basic_fs.hpp"
+
 #include "../geometry/2d/vector.hpp"
 #include "../io/obj_reader.hpp"
 #include "../rng/core.hpp"
@@ -21,6 +25,8 @@
 #include "./Model.hpp"
 #include "./Entity_Owner.hpp"
 #include "./Solid_Sphere.hpp"
+
+#include "./md2/Model.hpp"
 
 namespace engine {
 
@@ -34,7 +40,7 @@ auto sphere_sphere(Solid_Sphere const* a, Solid_Sphere const* b) -> bool {
 };
 
 class Scene {
-    using Window_Ptr = std::unique_ptr<sf::Window>;
+    using Window_Ptr = std::unique_ptr<sf::RenderWindow>;
     using Entity_Ptr = std::shared_ptr<Entity_Base>;
 
 public:
@@ -52,17 +58,21 @@ public:
 
     /* System::Status */
     bool m_update;
+    std::uint32_t m_shader_program;
+    std::int32_t d_current_sk;
 
     /* Constructor/Init */
     explicit Scene(std::size_t width, std::size_t height, const char* name) :
-     m_window(std::make_unique<sf::Window>(sf::VideoMode(width, height), name)),
+     m_window(std::make_unique<sf::RenderWindow>(sf::VideoMode(width, height), name)),
      m_clock(),
      m_width(width),
      m_height(height),
      rng(make_default_generator<float>()),
      m_entities(),
      m_collision_tracker(),
-     m_update(false)
+     m_update(false),
+     m_shader_program(0),
+     d_current_sk(0)
     {
         load();
     }
@@ -78,12 +88,15 @@ private:
     auto load() -> void {
         glewInit();
         glViewport(0, 0, m_width, m_height);
+        create_shader_program();
 
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
+
+        glEnable(GL_TEXTURE_2D);
 
         spawn();
     }
@@ -105,6 +118,19 @@ private:
                 else if (event.type == sf::Event::KeyPressed) {
                     if (event.key.code == sf::Keyboard::Space) {
                         m_update = !m_update;
+                    }
+                    if (event.key.code == sf::Keyboard::Right || event.key.code == sf::Keyboard::Left) {
+                        if (event.key.code == sf::Keyboard::Right) {
+                            d_current_sk = (d_current_sk + 1) % (std::size(md2::Model_Sprints) - 1);
+                        }
+                        if (event.key.code == sf::Keyboard::Left) {
+                            --d_current_sk;
+                            if (d_current_sk < 0) {
+                                d_current_sk = std::size(md2::Model_Sprints) - 2;
+                            }
+                        }
+                        auto ptr = dynamic_cast<md2::Model*>(m_entities.front().get());
+                        ptr->set_sprint_key(md2::Model_Sprints[d_current_sk]);
                     }
                 }
             }
@@ -129,29 +155,48 @@ private:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0.95112f, 0.95112f, 0.95112f, 1.f);
 
+        glUseProgram(m_shader_program);
         glPushMatrix();
-        std::ranges::for_each(m_entities, [](auto const& e){ e->draw(); });
+        std::ranges::for_each(m_entities, [](auto const& e){ e->render(); });
         glPopMatrix();
 
         glPushMatrix();
     }
 
-    auto spawn() -> void {
-        //spawn_spheres();
-        spawn_vbos();
+    auto create_shader_program() -> void {
+        auto vs_source = engine::assets::gl_shaders::basic_vs_source;
+        auto fs_source = engine::assets::gl_shaders::basic_fs_source;
+        m_shader_program = engine::shader::createProgram(vs_source, fs_source);
     }
 
-    auto spawn_vbos() -> void {
+    auto spawn() -> void {
+        //spawn_spheres();
+        //spawn_wv_vbos();
+        spawn_md2_vbos();
+    }
+
+    auto spawn_wv_vbos() -> void {
         auto model = std::make_shared<Model>(io::read_wavefront<float>("../../wv-obj/tank-i.obj"));
         model->load();
 
-        auto e1 = std::make_shared<Entity_Owner>(model, Vector_3Df{ 0.0f,   0.0f,  0.1f });
-        auto e2 = std::make_shared<Entity_Owner>(model, Vector_3Df{ -0.25f, 0.25f, 0.1f });
-        auto e3 = std::make_shared<Entity_Owner>(model, Vector_3Df{ 0.25f, -0.25f, 0.1f });
+        auto e1 = std::make_shared<Entity_Owner>(model, Vector_3Df{ -0.5f,   -0.5f,  0.1f });
+
+        auto model2 = std::make_shared<Model>(io::read_wavefront<float>("../../wv-obj/orc.obj"));
+        model2->load();
+
+        auto e2 = std::make_shared<Entity_Owner>(model2, Vector_3Df{ 0.5f,   -0.5f,  0.1f });
 
         m_entities.push_back(e1);
         m_entities.push_back(e2);
-        m_entities.push_back(e3);
+    }
+
+    auto spawn_md2_vbos() -> void {
+        auto resource = md2::io::read("../../md2-obj/cathos.md2", "../../md2-obj/cathos.png");
+
+        auto model = std::make_shared<md2::Model>(std::move(resource), md2::Model_Sprints[0], m_shader_program);
+        model->push_gpu();
+
+        m_entities.push_back(model);
     }
 
     auto spawn_spheres() -> void {

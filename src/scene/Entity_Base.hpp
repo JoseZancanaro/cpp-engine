@@ -5,8 +5,8 @@ namespace engine {
 
 class Entity_Base {
 public:
-    virtual auto draw() -> void {};
-    virtual auto update(float seconds) -> void {};
+    virtual auto render() -> void {}
+    virtual auto update(float seconds) -> void {}
     virtual ~Entity_Base() = default;
 };
 
