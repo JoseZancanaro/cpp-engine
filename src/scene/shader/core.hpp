@@ -29,7 +29,7 @@ auto createShader(std::uint32_t type, std::string const& str) -> std::uint32_t {
     return id;
 }
 
-auto createProgram(std::string const& vertex_shader, std::string const& fragment_shader) -> std::uint32_t {
+auto create_program(std::string const& vertex_shader, std::string const& fragment_shader) -> std::uint32_t {
     auto id = glCreateProgram();
 
     auto vs = createShader(GL_VERTEX_SHADER, vertex_shader);
