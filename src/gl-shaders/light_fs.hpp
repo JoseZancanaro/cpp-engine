@@ -1,11 +1,11 @@
-#ifndef CPP_ENGINE_BASIC_FS_HPP
-#define CPP_ENGINE_BASIC_FS_HPP
+#ifndef CPP_ENGINE_LIGHT_FS_HPP
+#define CPP_ENGINE_LIGHT_FS_HPP
 
 #include <string>
 
 namespace engine::assets::gl_shaders {
 
-auto basic_fs_source = std::string(R"(
+auto light_fs_source = std::string(R"(
 
 #version 330 core
 
@@ -38,4 +38,4 @@ void main()
 )");
 }
 
-#endif //CPP_ENGINE_BASIC_FS_HPP
+#endif //CPP_ENGINE_LIGHT_FS_HPP

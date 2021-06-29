@@ -16,6 +16,7 @@
 #include "./shader/core.hpp"
 #include "../gl-shaders/basic_vs.hpp"
 #include "../gl-shaders/basic_fs.hpp"
+#include "../gl-shaders/light_fs.hpp"
 
 #include "../geometry/2d/vector.hpp"
 #include "../io/obj_reader.hpp"
@@ -87,6 +88,7 @@ public:
     /* Shaders */
     std::uint32_t m_shader_main;
     std::uint32_t m_shader_grid;
+    std::uint32_t m_shader_light;
 
     /* Md2 Sprite */
     std::int32_t m_md2_current;
@@ -112,10 +114,11 @@ public:
             m_view(),
             m_shader_main(0),
             m_shader_grid(0),
+            m_shader_light(0),
             m_md2_current(0),
             m_wave_timer(0.0f),
             m_wave_intensity(0.0f),
-            m_wave_strength(0.5f),
+            m_wave_strength(0.6f),
             m_wave_duration(3.0f),
             m_wave_center({ -1.0f, -1.0f })
     {
@@ -137,12 +140,17 @@ private:
 
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        perspective(45.0f, m_height / m_width, 0.0f, 1000.0f);
+        //perspective(45.0f, m_height / m_width, 0.1f, 100.0f);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
         glEnable(GL_TEXTURE_2D);
+
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE);
+        glDepthFunc(GL_LEQUAL);
+        glDepthRange(0.0f, 1.0f);
 
         spawn();
     }
@@ -178,8 +186,8 @@ private:
                                 m_md2_current = std::size(md2::Model_Sprints) - 2;
                             }
                         }
-                        //auto ptr = dynamic_cast<md2::Model*>(m_entities.front().get());
-                        //ptr->set_sprint_key(md2::Model_Sprints[d_current_sk]);
+                        auto ptr = dynamic_cast<md2::Model*>(m_entities.front().get());
+                        ptr->set_sprint_key(md2::Model_Sprints[m_md2_current]);
                     }
 
                     if (event.key.code == sf::Keyboard::Numpad8) {
@@ -198,7 +206,7 @@ private:
                 else if (event.type == sf::Event::MouseButtonReleased) {
                     if (event.mouseButton.button == sf::Mouse::Left) {
                         m_wave_center = to_gl_coordinates(sf::Mouse::getPosition(*m_window), m_width, m_height);
-                        m_wave_intensity = 0.5f;
+                        m_wave_intensity = m_wave_strength;
                         m_wave_timer = 0.0f;
                     }
                 }
@@ -237,26 +245,26 @@ private:
     }
 
     auto render() -> void {
+        glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.95112f, 0.95112f, 0.95112f, 1.f);
+        glClearColor(0.95112f, 0.95112f, 0.95112f, 1.0f);
 
-        glUseProgram(m_shader_grid);
+        glUseProgram(m_shader_light);
 
-        glPushMatrix();
         std::ranges::for_each(m_entities, [](auto const& e){ e->render(); });
-        glPopMatrix();
-
-        glPushMatrix();
     }
 
     auto create_shader_program() -> void {
-        auto vs_source = engine::assets::gl_shaders::basic_fs_source;
+        auto vs_source = engine::assets::gl_shaders::basic_vs_source;
         auto fs_source = engine::assets::gl_shaders::basic_fs_source;
 
         auto grid_source = engine::assets::gl_shaders::grid_vs_source;
 
+        auto light_source = engine::assets::gl_shaders::light_fs_source;
+
         m_shader_main = engine::shader::create_program(vs_source, fs_source);
         m_shader_grid = engine::shader::create_program(grid_source, fs_source);
+        m_shader_light = engine::shader::create_program(vs_source, light_source);
     }
 
     auto update_shaders() -> void {
@@ -271,8 +279,8 @@ private:
     auto spawn() -> void {
         //spawn_spheres();
         //spawn_wv_vbos();
-        //spawn_md2_vbos();
-        spawn_water();
+        spawn_md2_vbos();
+        //spawn_water();
     }
 
     auto spawn_wv_vbos() -> void {
