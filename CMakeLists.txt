@@ -53,7 +53,7 @@ add_executable(cpp-engine
         src/texture/core.hpp
         src/model/Vbo_Grid.hpp
         src/gl-shaders/grid_vs.hpp
-        src/gl-shaders/light_fs.hpp)
+        src/gl-shaders/light_fs.hpp src/model/Quad.hpp)
 
 target_link_libraries(cpp-engine ${CONAN_LIBS})
 
