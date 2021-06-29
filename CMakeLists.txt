@@ -40,7 +40,7 @@ add_executable(cpp-engine
         src/scene/sample/tetrahedron.hpp
         src/scene/sample/perspective_tetrahedron.hpp
         src/scene/sample/wavefront_runner.hpp
-        src/scene/sample/glwavefront_runner.hpp src/scene/Buffered_Entity_Base.hpp src/scene/Model.hpp src/scene/Entity_Owner.hpp src/scene/md2/header.hpp src/scene/md2/loader.hpp src/scene/md2/Model.hpp src/scene/shader/core.hpp src/gl-shaders/basic_vs.hpp src/gl-shaders/basic_fs.hpp)
+        src/scene/sample/glwavefront_runner.hpp src/scene/Buffered_Entity_Base.hpp src/scene/Model.hpp src/scene/Entity_Owner.hpp src/scene/md2/header.hpp src/scene/md2/loader.hpp src/scene/md2/Model.hpp src/scene/shader/core.hpp src/gl-shaders/basic_vs.hpp src/gl-shaders/basic_fs.hpp src/texture/core.hpp src/model/Vbo_Grid.hpp src/gl-shaders/grid_vs.hpp)
 
 target_link_libraries(cpp-engine ${CONAN_LIBS})
 
