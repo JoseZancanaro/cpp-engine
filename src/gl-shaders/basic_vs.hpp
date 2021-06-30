@@ -17,10 +17,12 @@ layout (location = 1) in vec2 t_pos;
 
 uniform mat4 transform;
 uniform float lerp;
+uniform vec3 light;
 
 out vec2 tex_vertex;
 out vec3 normal;
 out vec3 frag_pos;
+out vec3 light_source;
 
 void main()
 {
@@ -32,8 +34,9 @@ void main()
 
     gl_Position = transform * vec4(lerp_vertex, 1.0);
     tex_vertex = t_pos;
-    normal = lerp_normal;
+    normal = normalize(vec3(transform * vec4(lerp_normal, 1.0)));
     frag_pos = vec3(transform * vec4(lerp_vertex, 1.0));
+    light_source = light;
 }
 
 )");

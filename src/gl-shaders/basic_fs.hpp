@@ -19,10 +19,8 @@ out vec4 FragColor;
 
 void main()
 {
-    vec4 color = texture(tex, tex_vertex);
-    if (color.rgb == vec3(0.0, 0.0, 0.0))
-        color = vec4(tex_vertex, 0.0, 1.0);
-    FragColor = color;
+    vec4 pixel_texture = texture(tex, tex_vertex);
+    FragColor = pixel_texture;
 }
 
 )");

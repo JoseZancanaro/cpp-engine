@@ -60,7 +60,7 @@ public:
        m_normal_vbos(m_resource.num_frames),
        m_tex_vbo(0),
        m_tex_data_vbo(0),
-       m_transform(glm::translate(glm::vec3{ 0.0f, 0.0f, 0.0f })
+       m_transform(glm::translate(glm::vec3{ 0.1f, 0.0f, 0.0f })
                     * glm::scale(glm::vec3{ 0.03f, 0.03f, 0.03f })
                     * glm::rotate(0.0f, glm::vec3{ 0.0f, 1.0f, 0.0f })),
        m_fps(10.0f),
@@ -157,7 +157,7 @@ public:
             glEnableVertexAttribArray(2);
 
             glBindBuffer(GL_ARRAY_BUFFER, m_normal_vbos[m_state.next_frame]);
-            glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+            glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 0, 0);
             glEnableVertexAttribArray(4);
 
             glBindBuffer(GL_ARRAY_BUFFER, m_tex_vbo);
@@ -174,6 +174,7 @@ public:
         glUniform1f(glGetUniformLocation(m_shader, "lerp"), m_state.lerp);
         glUniform1i(glGetUniformLocation(m_shader, "tex"), 0);
         glUniformMatrix4fv(glGetUniformLocation(m_shader, "transform"), 1, GL_FALSE, glm::value_ptr(m_transform));
+        glUniform3f(glGetUniformLocation(m_shader, "light"), 0.0f, 0.0f, 0.0f);
     }
 
     auto set_sprint_key(Sprint_Key sk) -> void {
