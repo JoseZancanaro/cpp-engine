@@ -2,7 +2,6 @@
 #define CPP_ENGINE_MODEL_QUAD_HPP
 
 #include <cstdint>
-#include <pair>
 #include <vector>
 
 #include <glm/glm.hpp>
@@ -33,38 +32,48 @@ auto tans(glm::vec3 const& i, glm::vec3 const& j, glm::vec3 const& k,
 }
 
 class Simple_Quad : public Buffered_Entity_Base {
+    /* Model Drawing Data */
     std::vector<glm::vec3> m_vertex_data;
     std::vector<glm::vec3> m_normal_data;
     std::vector<glm::vec2> m_uv_data;
     std::vector<glm::vec3> m_tangent_data;
     std::vector<glm::vec3> m_bitangent_data;
 
+    /* Model Texture */
     Texture m_texture_diffuse;
     Texture m_texture_normal;
 
+    /* Model VAO & VBOs */
+    std::uint32_t m_shader;
     std::uint32_t m_vao;
     std::uint32_t m_vertex_vbo;
     std::uint32_t m_normal_vbo;
     std::uint32_t m_uv_vbo;
     std::uint32_t m_tangent_vbo;
-    std::uint32_t m_bit_tangent_vbo;
+    std::uint32_t m_bitangent_vbo;
+
+    /* Model Transform Data */
+    glm::mat4 m_model;
 
 public:
-    Simple_Quad(std::vector<glm::vec3> && vertices, Texture && diffuse, Texture && normal)
-    : m_vertex_data(std::move(vertices)),
+    Simple_Quad(std::vector<glm::vec3> && vertices, Texture && diffuse, Texture && normal, std::uint32_t shader)
+    : m_vertex_data({ vertices[0], vertices[1], vertices[2], vertices[0], vertices[2], vertices[3] }),
       m_normal_data(std::size(m_vertex_data), glm::vec3(0.0f, 0.0f, 1.0f)),
-      m_uv_data({ glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f) }),
+      m_uv_data({ glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
+                  glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f) }),
       m_texture_diffuse(std::move(diffuse)),
       m_texture_normal(std::move(normal)),
+      m_shader(shader),
       m_vao(0),
       m_vertex_vbo(0),
       m_normal_vbo(0),
       m_uv_vbo(0),
       m_tangent_vbo(0),
-      m_bit_tangent_vbo(0)
+      m_bitangent_vbo(0),
+      m_model(glm::mat4(1.0f))
     {
         auto [tan1, bitan1] = tans(m_vertex_data[0], m_vertex_data[1], m_vertex_data[2], m_uv_data[0], m_uv_data[1], m_uv_data[2]);
-        auto [tan2, bitan2] = tans(m_vertex_data[0], m_vertex_data[2], m_vertex_data[3], m_uv_data[0], m_uv_data[2], m_uv_data[3]);
+        auto [tan2, bitan2] = tans(m_vertex_data[3], m_vertex_data[4], m_vertex_data[5], m_uv_data[3], m_uv_data[4], m_uv_data[5]);
 
         m_tangent_data = {tan1, tan1, tan1, tan2, tan2, tan2};
         m_bitangent_data = {bitan1, bitan1, bitan1, bitan2, bitan2, bitan2};
@@ -77,7 +86,7 @@ public:
         glGenBuffers(1, &m_normal_vbo);
         glGenBuffers(1, &m_uv_vbo);
         glGenBuffers(1, &m_tangent_vbo);
-        glGenBuffers(1, &m_bit_tangent_vbo);
+        glGenBuffers(1, &m_bitangent_vbo);
 
         glBindVertexArray(m_vao);
 
@@ -107,7 +116,10 @@ public:
         glEnableVertexAttribArray(4);
 
         m_texture_diffuse.gen_buffer();
-        m_texture_normal.gen_buffer()
+        m_texture_normal.gen_buffer();
+
+        glUniform1i(glGetUniformLocation(m_shader, "diffuse_map"), 0);
+        glUniform1i(glGetUniformLocation(m_shader, "normal_map"), 1);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
@@ -115,11 +127,15 @@ public:
 
     auto render() -> void override {
         m_texture_diffuse.bind();
-        //m_texture_normal.bind();
+        m_texture_normal.bind();
 
         glBindVertexArray(m_vao);
         glDrawArrays(GL_TRIANGLES, 0, std::size(m_vertex_data));
         glBindVertexArray(0);
+    }
+
+    auto update(float seconds) -> void override {
+        glUniformMatrix4fv(glGetUniformLocation(m_shader, "model"), 1, GL_FALSE, glm::value_ptr(m_model));
     }
 };
 

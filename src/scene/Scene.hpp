@@ -16,6 +16,8 @@
 #include "./shader/core.hpp"
 #include "../gl-shaders/basic_vs.hpp"
 #include "../gl-shaders/basic_fs.hpp"
+#include "../gl-shaders/grid_vs.hpp"
+#include "../gl-shaders/light_vs.hpp"
 #include "../gl-shaders/light_fs.hpp"
 
 #include "../geometry/2d/vector.hpp"
@@ -32,7 +34,7 @@
 #include "./md2/Model.hpp"
 
 #include "../model/Vbo_Grid.hpp"
-#include "../gl-shaders/grid_vs.hpp"
+#include "../model/Simple_Quad.hpp"
 
 namespace engine {
 
@@ -100,6 +102,11 @@ public:
     float m_wave_duration;
     glm::vec2 m_wave_center;
 
+    /* Lighting */
+    glm::mat4 m_projection;
+    glm::vec3 m_light_pos;
+    glm::vec3 m_view_pos;
+
     /* Constructor/Init */
     explicit Scene(std::size_t width, std::size_t height, const char* name) :
             m_window(std::make_unique<sf::RenderWindow>(sf::VideoMode(width, height), name)),
@@ -120,7 +127,10 @@ public:
             m_wave_intensity(0.0f),
             m_wave_strength(0.6f),
             m_wave_duration(3.0f),
-            m_wave_center({ -1.0f, -1.0f })
+            m_wave_center({ -1.0f, -1.0f }),
+            m_projection({}),
+            m_light_pos({ 0.0f, -0.4f, -2.0f }),
+            m_view_pos({ 0.0f, 0.0f, 0.0f })
     {
         load();
     }
@@ -146,11 +156,6 @@ private:
         glLoadIdentity();
 
         glEnable(GL_TEXTURE_2D);
-
-        glEnable(GL_DEPTH_TEST);
-        glDepthMask(GL_TRUE);
-        glDepthFunc(GL_LEQUAL);
-        glDepthRange(0.0f, 1.0f);
 
         spawn();
     }
@@ -202,6 +207,47 @@ private:
                     else if (event.key.code == sf::Keyboard::Numpad4) {
                         m_camera_angle.y -= 10.0f;
                     }
+
+                    if (event.key.code == sf::Keyboard::Y) {
+                        m_light_pos.x -= 0.1f;
+                    }
+                    else if (event.key.code == sf::Keyboard::H) {
+                        m_light_pos.y -= 0.1f;
+                    }
+                    else if (event.key.code == sf::Keyboard::N) {
+                        m_light_pos.z -= 0.1f;
+                    }
+                    else if (event.key.code == sf::Keyboard::U) {
+                        m_light_pos.x += 0.1f;
+                    }
+                    else if (event.key.code == sf::Keyboard::J) {
+                        m_light_pos.y += 0.1f;
+                    }
+                    else if (event.key.code == sf::Keyboard::M) {
+                        m_light_pos.z += 0.1f;
+                    }
+
+                    if (event.key.code == sf::Keyboard::R) {
+                        m_view_pos.x -= 0.1f;
+                    }
+                    else if (event.key.code == sf::Keyboard::F) {
+                        m_view_pos.y -= 0.1f;
+                    }
+                    else if (event.key.code == sf::Keyboard::V) {
+                        m_view_pos.z -= 0.1f;
+                    }
+                    else if (event.key.code == sf::Keyboard::T) {
+                        m_view_pos.x += 0.1f;
+                    }
+                    else if (event.key.code == sf::Keyboard::G) {
+                        m_view_pos.y += 0.1f;
+                    }
+                    else if (event.key.code == sf::Keyboard::B) {
+                        m_view_pos.z += 0.1f;
+                    }
+
+                    fmt::print("Light Position {} {} {}\n", m_light_pos.x, m_light_pos.y, m_light_pos.z);
+                    fmt::print("View Position {} {} {}\n", m_view_pos.x, m_view_pos.y, m_view_pos.z);
                 }
                 else if (event.type == sf::Event::MouseButtonReleased) {
                     if (event.mouseButton.button == sf::Mouse::Left) {
@@ -224,6 +270,8 @@ private:
     }
 
     auto update(sf::Time elapsed) -> void {
+        m_projection = glm::mat4(1.0f);
+
         m_view = glm::rotate(glm::radians(m_camera_angle.x), glm::vec3{ 1.0f, 0.0f, 0.0f })
                     * glm::rotate(glm::radians(m_camera_angle.y), glm::vec3{ 0.0f, 1.0f, 0.0f });
 
@@ -247,7 +295,7 @@ private:
     auto render() -> void {
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.95112f, 0.95112f, 0.95112f, 1.0f);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
         glUseProgram(m_shader_light);
 
@@ -260,11 +308,12 @@ private:
 
         auto grid_source = engine::assets::gl_shaders::grid_vs_source;
 
-        auto light_source = engine::assets::gl_shaders::light_fs_source;
+        auto light_vs_source = engine::assets::gl_shaders::light_vs_source;
+        auto light_fs_source = engine::assets::gl_shaders::light_fs_source;
 
         m_shader_main = engine::shader::create_program(vs_source, fs_source);
         m_shader_grid = engine::shader::create_program(grid_source, fs_source);
-        m_shader_light = engine::shader::create_program(vs_source, light_source);
+        m_shader_light = engine::shader::create_program(light_vs_source, light_fs_source);
     }
 
     auto update_shaders() -> void {
@@ -274,13 +323,19 @@ private:
         glUniform1f(glGetUniformLocation(m_shader_grid, "intensity"), m_wave_intensity);
 
         glUniform2f(glGetUniformLocation(m_shader_grid, "center"), m_wave_center.x, m_wave_center.y);
+
+        glUniformMatrix4fv(glGetUniformLocation(m_shader_light, "projection"), 1, GL_FALSE, glm::value_ptr(m_projection));
+        glUniformMatrix4fv(glGetUniformLocation(m_shader_light, "world"), 1, GL_FALSE, glm::value_ptr(m_view));
+        glUniform3f(glGetUniformLocation(m_shader_light, "light"), m_light_pos.x, m_light_pos.y, m_light_pos.z);
+        glUniform3f(glGetUniformLocation(m_shader_light, "view"), m_view_pos.x, m_view_pos.y, m_view_pos.z);
     }
 
     auto spawn() -> void {
         //spawn_spheres();
         //spawn_wv_vbos();
-        spawn_md2_vbos();
+        //spawn_md2_vbos();
         //spawn_water();
+        spawn_another_brick_in_the_wall();
     }
 
     auto spawn_wv_vbos() -> void {
@@ -312,6 +367,18 @@ private:
         grid->load();
 
         m_entities.push_back(grid);
+    }
+
+    auto spawn_another_brick_in_the_wall() -> void {
+        auto quad = std::make_shared<Simple_Quad>(std::vector<glm::vec3>
+                                                    { glm::vec3(-1.0f,  1.0f, 0.1f), glm::vec3(-1.0f, -1.0f, 0.1f),
+                                                      glm::vec3( 1.0f, -1.0f, 0.1f), glm::vec3( 1.0f,  1.0f, 0.1f) },
+                                                  Texture("../../assets/images/brickwall.jpg", 0),
+                                                  Texture("../../assets/images/brickwall_normal.jpg", 1),
+                                                  m_shader_light);
+        quad->load();
+
+        m_entities.push_back(quad);
     }
 
     auto spawn_spheres() -> void {

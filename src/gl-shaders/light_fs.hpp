@@ -9,30 +9,42 @@ auto light_fs_source = std::string(R"(
 
 #version 330 core
 
-in vec2 tex_vertex;
-in vec3 normal;
-in vec3 frag_pos;
-in vec3 light_source;
+in VS_OUT {
+    vec3 frag_pos;
+    vec2 tex_vertex;
+    vec3 tan_light;
+    vec3 tan_view;
+    vec3 tan_frag_pos;
+} fs_in;
 
-uniform sampler2D tex;
+uniform sampler2D diffuse_map;
+uniform sampler2D normal_map;
 
-out vec4 FragColor;
+uniform vec3 light;
+
+out vec4 frag_color;
 
 void main()
 {
-    vec4 pixel_texture = texture(tex, tex_vertex);
+    vec3 normal_texture = normalize(texture(normal_map, fs_in.tex_vertex).rgb * 2 - 1);
 
-    vec3 L = normalize(light_source - frag_pos);
-    vec3 E = normalize(-frag_pos);
-    vec3 R = normalize(-reflect(L, normal));
+    vec3 pixel_texture = texture(diffuse_map, fs_in.tex_vertex).rgb;
 
-    vec4 difuse_diff = clamp(vec4(1.0, 1.0, 1.0, 1.0) * max(dot(normal, L), 0.0), 0.0, 1.0);
-    float d = (distance(frag_pos, light_source)) * 2;
-    vec4 specular_diff = clamp(vec4(1.0, 1.0, 1.0, 1.0) * pow(max(dot(R, E), 0.0), 0.3 * 10), 0.0, 1.0);
+    vec3 ambient = 0.1 * pixel_texture;
 
-    //FragColor = vec4(specular_diff.xyz + difuse_diff.xyz + max(vec3(1 - d, 1 - d, 1 - d), 0), 1.0) * pixel_texture;
-    //FragColor = vec4(difuse_diff.xyz, 1.0);
-    FragColor = vec4(normal * 0.5 + 0.5, 1.0);
+    // Diffuse Light
+    vec3 light_dir = normalize(fs_in.tan_light - fs_in.tan_frag_pos);
+    float diff = max(dot(light_dir, normal_texture), 0.0);
+    vec3 diffuse = diff * pixel_texture;
+
+    // Specular Light
+    vec3 view_dir = normalize(fs_in.tan_view - fs_in.tan_frag_pos);
+    vec3 reflect_dir = reflect(-light_dir, normal_texture);
+    vec3 halfway_dir = normalize(light_dir + view_dir);
+    float spec = pow(max(dot(normal_texture, halfway_dir), 0.0), 32.0);
+    vec3 specular = vec3(0.2) * spec;
+
+    frag_color = vec4(ambient + diffuse + specular, 1.0);
 }
 
 )");
